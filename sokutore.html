@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>速トレ｜英検速読トレーナー</title>
 <style>
-  /* ===== CSS変数（はばトレ共通ライトテーマ） ===== */
+  /* ===== CSS変数 ===== */
   :root {
     --bg:       #EEE9E1;
     --surface:  #FFFFFF;
@@ -18,26 +18,20 @@
     --gold:     #E8A020;
     --goldDark: #C47D10;
     --blue:     #2F80ED;
-    --blueLt:   #3B82F6;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    color: var(--text);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 12px 16px 40px;
+    background: var(--bg); min-height: 100vh; color: var(--text);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 12px 16px 48px;
   }
   .container { width: 100%; max-width: 640px; }
   .screen { display: none; }
   .screen.active { display: block; }
 
   /* ===== TITLE ===== */
-  .title { text-align: center; margin-bottom: 28px; }
+  .title { text-align: center; margin-bottom: 24px; }
   .title h1 {
     font-size: 2.6rem; font-weight: 900;
     background: linear-gradient(90deg, #E8A020, #F97316);
@@ -46,102 +40,151 @@
   }
   .title p { color: var(--text2); margin-top: 6px; font-size: 0.95rem; }
 
-  /* ===== CARD ===== */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px; padding: 24px; margin-bottom: 18px;
-    box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+  /* ===== GRADE MAP ===== */
+  .grade-map {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-bottom: 16px;
   }
-  .card h3 { color: var(--gold); margin-bottom: 14px; font-size: 0.95rem; letter-spacing: 1px; text-transform: uppercase; }
+  .grade-card {
+    background: var(--surface); border: 2px solid var(--borderMd);
+    border-radius: 16px; padding: 20px 14px 16px;
+    cursor: pointer; transition: all 0.18s; text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .grade-card:hover:not(.locked) {
+    transform: translateY(-2px); border-color: var(--gold);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+  }
+  .grade-card.locked   { opacity: 0.4; cursor: not-allowed; }
+  .grade-card.complete { border-color: #10B981; background: rgba(16,185,129,0.04); }
+  .grade-card.in-progress { border-color: var(--gold); background: rgba(232,160,32,0.04); }
 
-  /* ===== GRADE TABS ===== */
-  .grade-tabs {
-    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;
+  .grade-card-name { font-size: 1.5rem; font-weight: 900; margin-bottom: 5px; color: var(--text); }
+  .grade-card.complete     .grade-card-name { color: #059669; }
+  .grade-card.in-progress  .grade-card-name { color: var(--goldDark); }
+  .grade-card.locked       .grade-card-name { color: var(--text3); }
+
+  .grade-card-status { font-size: 0.78rem; color: var(--text3); margin-bottom: 10px; min-height: 1.2em; }
+  .grade-card.complete    .grade-card-status { color: #059669; }
+  .grade-card.in-progress .grade-card-status { color: var(--goldDark); }
+
+  .grade-card-bar { height: 4px; background: rgba(0,0,0,0.08); border-radius: 2px; overflow: hidden; }
+  .grade-card-fill { height: 100%; border-radius: 2px; background: var(--gold); transition: width 0.5s; }
+  .grade-card.complete .grade-card-fill { background: #10B981; }
+
+  /* ===== STAGE MAP ===== */
+  .stage-map-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; gap: 12px;
   }
-  .grade-tab {
-    padding: 8px 16px; border-radius: 10px;
-    border: 1px solid var(--borderMd);
-    background: var(--surface2);
+  .btn-back {
+    padding: 8px 14px; border-radius: 10px;
+    border: 1px solid var(--borderMd); background: var(--surface2);
     color: var(--text2); cursor: pointer; font-size: 0.9rem;
-    font-weight: 600; transition: all 0.2s;
+    font-weight: 600; transition: all 0.2s; flex-shrink: 0;
   }
-  .grade-tab:hover { border-color: var(--gold); color: var(--goldDark); }
-  .grade-tab.active {
-    border-color: var(--gold); background: rgba(232,160,32,0.1);
-    color: var(--goldDark); font-weight: 700;
+  .btn-back:hover { border-color: var(--gold); color: var(--goldDark); }
+  .stage-map-grade {
+    font-size: 1.7rem; font-weight: 900;
+    background: linear-gradient(90deg, #E8A020, #F97316);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-align: center;
   }
 
-  /* ===== SUB LEVEL BUTTONS ===== */
-  .sublevel-area { margin-bottom: 8px; }
-  .sublevel-area h3 { color: var(--text3); font-size: 0.85rem; margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase; }
-  .sublevel-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-  .sublevel-btn {
-    padding: 9px 20px; border-radius: 10px;
-    border: 1px solid var(--borderMd);
-    background: var(--surface2);
-    color: var(--text2); cursor: pointer; font-size: 0.9rem;
-    font-weight: 600; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
-  }
-  .sublevel-btn:hover { border-color: var(--gold); color: var(--goldDark); }
-  .sublevel-btn.active {
-    border-color: var(--gold); background: rgba(232,160,32,0.1);
-    color: var(--goldDark); font-weight: 700;
-  }
-  .sublevel-count { font-size: 0.7rem; color: var(--text3); background: var(--surface2); padding: 1px 6px; border-radius: 10px; border: 1px solid var(--border); }
-  .sublevel-btn.active .sublevel-count { color: var(--goldDark); background: rgba(232,160,32,0.12); border-color: rgba(232,160,32,0.3); }
+  /* ===== STAGE PATH ===== */
+  .stage-path { display: flex; flex-direction: column; }
 
-  /* ===== START BUTTON ===== */
-  .btn-start {
-    width: 100%; padding: 16px;
+  .stage-item {
+    display: flex; align-items: flex-start; gap: 16px;
+    position: relative; cursor: default;
+  }
+  /* Vertical connector line */
+  .stage-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px; top: 42px; height: 30px; width: 2px;
+    background: var(--borderMd); z-index: 0;
+  }
+  .stage-item.cleared:not(:last-child)::after,
+  .stage-item.speed-cleared:not(:last-child)::after { background: #10B981; }
+  .stage-item.active:not(:last-child)::after { background: rgba(232,160,32,0.5); }
+
+  /* Stage circle */
+  .stage-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.95rem; flex-shrink: 0;
+    border: 2px solid var(--borderMd);
+    background: var(--surface2); color: var(--text3);
+    position: relative; z-index: 1; transition: transform 0.18s;
+  }
+  .stage-item[data-clickable="1"]:hover .stage-circle { transform: scale(1.12); }
+
+  .stage-item.cleared .stage-circle {
+    background: #10B981; border-color: #059669; color: #fff; font-size: 1.1rem;
+  }
+  .stage-item.speed-cleared .stage-circle {
     background: linear-gradient(135deg, #FBBF24, #F97316);
-    border: none; border-radius: 14px;
-    font-size: 1.25rem; font-weight: 800; color: #fff; cursor: pointer;
-    letter-spacing: 2px; transition: transform 0.1s, box-shadow 0.2s;
-    box-shadow: 0 4px 20px rgba(251,191,36,0.4);
+    border-color: var(--goldDark); color: #fff; font-size: 1rem;
   }
-  .btn-start:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(251,191,36,0.55); }
-  .btn-start:active:not(:disabled) { transform: translateY(0); }
-  .btn-start:disabled { opacity: 0.35; cursor: not-allowed; }
+  .stage-item.active .stage-circle {
+    background: linear-gradient(135deg, #FBBF24, #F97316);
+    border-color: var(--goldDark); color: #fff;
+    box-shadow: 0 0 0 5px rgba(232,160,32,0.18);
+    animation: stagePulse 2s infinite;
+  }
+  .stage-item.locked .stage-circle { opacity: 0.35; }
+
+  @keyframes stagePulse {
+    0%,100% { box-shadow: 0 0 0 5px rgba(232,160,32,0.18); }
+    50%      { box-shadow: 0 0 0 10px rgba(232,160,32,0.07); }
+  }
+
+  /* Stage info */
+  .stage-info {
+    flex: 1; padding: 7px 0 30px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stage-item:last-child .stage-info { border-bottom: none; }
+  .stage-info-title { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+  .stage-item.locked       .stage-info-title { color: var(--text3); }
+  .stage-info-sub { font-size: 0.78rem; color: var(--text3); margin-top: 3px; }
+  .stage-item.cleared      .stage-info-sub,
+  .stage-item.speed-cleared .stage-info-sub { color: #059669; }
+  .stage-item.active       .stage-info-sub { color: var(--goldDark); font-weight: 600; }
 
   /* ===== HUD ===== */
   .hud {
     display: flex; justify-content: space-between; align-items: center;
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 10px 14px;
-    margin-bottom: 14px; font-size: 0.85rem; flex-wrap: wrap; gap: 6px;
+    border-radius: 12px; padding: 10px 14px; margin-bottom: 14px;
     box-shadow: 0 1px 6px rgba(0,0,0,0.05);
   }
   .hud-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .hud-label { color: var(--text3); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
   .hud-value { font-weight: 700; font-size: 1rem; color: var(--text); }
-  .hud-grade { color: var(--blue); }
-  .hud-combo { color: var(--gold); }
-  .hud-correct { color: #059669; }
+  .hud-grade   { color: var(--blue); }
+  .hud-cleared { color: #059669; }
 
   /* ===== TIMER ===== */
-  .timer-section { margin-bottom: 14px; }
+  .timer-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  }
   .timer-display {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 6px;
   }
   .timer-elapsed { font-size: 1.5rem; font-weight: 800; color: var(--blue); }
-  .timer-target { font-size: 0.85rem; color: var(--text3); }
-  .timer-bar-bg {
-    width: 100%; height: 8px; background: rgba(0,0,0,0.08);
-    border-radius: 4px; overflow: hidden;
-  }
-  .timer-bar {
-    height: 100%; border-radius: 4px;
-    transition: width 0.5s linear, background-color 0.5s;
-    background: #10B981;
-  }
+  .timer-target  { font-size: 0.85rem; color: var(--text3); }
+  .timer-bar-bg  { width: 100%; height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; }
+  .timer-bar     { height: 100%; border-radius: 4px; transition: width 0.5s linear, background-color 0.5s; background: #10B981; }
 
   /* ===== PASSAGE ===== */
   .passage-box {
-    background: var(--surface2); border-radius: 14px;
-    padding: 18px; margin-bottom: 14px;
-    max-height: 260px; overflow-y: auto;
+    background: var(--surface2); border-radius: 14px; padding: 18px;
+    margin-bottom: 14px; max-height: 260px; overflow-y: auto;
     line-height: 1.85; font-size: 0.95rem; color: var(--text);
     border: 1px solid var(--border);
   }
@@ -151,17 +194,13 @@
   }
 
   /* ===== QUESTION ===== */
-  .question-text {
-    font-size: 0.95rem; color: var(--text); margin-bottom: 14px;
-    line-height: 1.6; font-weight: 600;
-  }
+  .question-text { font-size: 0.95rem; color: var(--text); margin-bottom: 14px; line-height: 1.6; font-weight: 600; }
 
-  /* ===== CHOICE BUTTONS ===== */
+  /* ===== CHOICES ===== */
   .choices { display: grid; gap: 10px; margin-bottom: 14px; }
   .choice-btn {
     width: 100%; padding: 13px 16px; border-radius: 12px; text-align: left;
-    border: 1px solid var(--borderMd);
-    background: var(--surface);
+    border: 1px solid var(--borderMd); background: var(--surface);
     color: var(--text); cursor: pointer; font-size: 0.92rem;
     transition: all 0.15s; display: flex; align-items: flex-start; gap: 10px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.05);
@@ -173,28 +212,21 @@
   .choice-label { font-weight: 700; min-width: 22px; color: var(--gold); }
 
   /* ===== FEEDBACK ===== */
-  .feedback {
-    display: none; border-radius: 12px; padding: 12px 16px;
-    margin-bottom: 14px; font-size: 0.9rem;
-    align-items: center; gap: 10px;
-  }
+  .feedback { display: none; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-size: 0.9rem; align-items: center; gap: 10px; }
   .feedback.show { display: flex; }
   .feedback.correct-fb { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.4); color: #065F46; }
   .feedback.wrong-fb   { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #991B1B; }
   .feedback-icon { font-size: 1.4rem; }
-  .feedback-speed { color: var(--goldDark); font-weight: 700; margin-left: 8px; }
 
   /* ===== REVIEW BUTTONS ===== */
   .review-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
   .btn-review {
-    padding: 9px 16px; border-radius: 10px;
-    border: 1px solid var(--borderMd);
-    background: var(--surface2);
-    color: var(--text2); cursor: pointer; font-size: 0.85rem;
-    font-weight: 600; transition: all 0.2s;
+    padding: 9px 16px; border-radius: 10px; border: 1px solid var(--borderMd);
+    background: var(--surface2); color: var(--text2); cursor: pointer;
+    font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
   }
   .btn-review:hover { border-color: var(--gold); color: var(--goldDark); }
-  .btn-review.open { border-color: var(--gold); background: rgba(232,160,32,0.08); color: var(--goldDark); }
+  .btn-review.open  { border-color: var(--gold); background: rgba(232,160,32,0.08); color: var(--goldDark); }
 
   /* ===== COLLAPSIBLE ===== */
   .collapse-content {
@@ -206,7 +238,9 @@
   .collapse-content.show { display: block; }
   .collapse-content .rp-label { color: var(--blue); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 6px; }
 
-  /* ===== NEXT BUTTON ===== */
+  /* ===== STAGE ACTIONS ===== */
+  .stage-actions { display: none; flex-direction: column; gap: 10px; }
+
   .btn-next {
     width: 100%; padding: 14px;
     background: linear-gradient(135deg, #FBBF24, #F97316);
@@ -217,43 +251,49 @@
   }
   .btn-next:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(251,191,36,0.55); }
   .btn-next:active { transform: translateY(0); }
+  .btn-next.btn-retry {
+    background: linear-gradient(135deg, #6366F1, #8B5CF6);
+    box-shadow: 0 3px 14px rgba(99,102,241,0.35);
+  }
+  .btn-next.btn-retry:hover { box-shadow: 0 5px 20px rgba(99,102,241,0.5); }
 
-  /* ===== EXIT BUTTON (fixed) ===== */
+  .btn-map {
+    width: 100%; padding: 12px;
+    background: var(--surface2); border: 1px solid var(--borderMd);
+    border-radius: 12px; font-size: 0.95rem; font-weight: 600;
+    color: var(--text2); cursor: pointer; transition: all 0.2s;
+  }
+  .btn-map:hover { color: var(--text); border-color: rgba(0,0,0,0.22); background: var(--surface); }
+
+  /* ===== EXIT (fixed) ===== */
   .btn-exit {
     position: fixed; top: 14px; right: 14px; z-index: 100;
     padding: 7px 14px; border-radius: 10px;
-    border: 1px solid rgba(239,68,68,0.35);
-    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.35); background: rgba(239,68,68,0.08);
     color: #DC2626; cursor: pointer; font-size: 0.85rem;
     font-weight: 700; transition: all 0.2s; display: none;
   }
-  .btn-exit.show { display: block; }
+  .btn-exit.show  { display: block; }
   .btn-exit:hover { background: rgba(239,68,68,0.15); border-color: #EF4444; }
 
-  /* ===== RESULT ===== */
-  .result-title { text-align: center; margin-bottom: 24px; }
-  .result-title h2 {
-    font-size: 2rem; font-weight: 900; margin-bottom: 6px;
+  /* ===== GRADE CLEAR ===== */
+  .grade-clear-wrap { text-align: center; padding: 48px 0 24px; }
+  .grade-clear-star {
+    font-size: 3.2rem; margin-bottom: 16px;
+    animation: starPop 0.55s cubic-bezier(.36,1.56,.64,1) both;
+  }
+  @keyframes starPop {
+    from { transform: scale(0.2); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .grade-clear-title {
+    font-size: 2.2rem; font-weight: 900; margin-bottom: 10px;
     background: linear-gradient(90deg, #E8A020, #F97316);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .result-score-big {
-    text-align: center; margin-bottom: 8px;
-    font-size: 4rem; font-weight: 900;
-    background: linear-gradient(90deg, #E8A020, #F97316);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    line-height: 1;
-  }
-  .result-score-label { text-align: center; color: var(--text3); font-size: 0.9rem; margin-bottom: 24px; }
-  .result-stats {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;
-  }
-  .stat-card {
-    background: var(--surface2); border-radius: 14px; padding: 16px 10px;
-    text-align: center; border: 1px solid var(--border);
-  }
-  .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--gold); }
-  .stat-label { font-size: 0.72rem; color: var(--text3); margin-top: 4px; line-height: 1.3; }
+  .grade-clear-msg { color: var(--text2); font-size: 1rem; margin-bottom: 36px; line-height: 1.7; }
+
+  /* ===== RESULT BUTTONS (shared) ===== */
   .result-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .btn-result {
     padding: 14px; border-radius: 12px; font-size: 1rem;
@@ -261,14 +301,8 @@
     transition: transform 0.1s, box-shadow 0.2s;
   }
   .btn-result:hover { transform: translateY(-2px); }
-  .btn-result.again {
-    background: linear-gradient(135deg, #FBBF24, #F97316);
-    color: #fff; box-shadow: 0 3px 12px rgba(251,191,36,0.4);
-  }
-  .btn-result.home {
-    background: var(--surface2); color: var(--text2);
-    border: 1px solid var(--borderMd);
-  }
+  .btn-result.again { background: linear-gradient(135deg, #FBBF24, #F97316); color: #fff; box-shadow: 0 3px 12px rgba(251,191,36,0.4); }
+  .btn-result.home  { background: var(--surface2); color: var(--text2); border: 1px solid var(--borderMd); }
   .btn-result.home:hover { color: var(--text); border-color: rgba(0,0,0,0.28); }
 
   /* ===== SPEED POPUP ===== */
@@ -279,26 +313,18 @@
     color: #fff; font-size: 1.5rem; font-weight: 900;
     padding: 18px 36px; border-radius: 20px;
     z-index: 200; pointer-events: none;
-    box-shadow: 0 8px 40px rgba(251,191,36,0.5);
-    letter-spacing: 1px;
+    box-shadow: 0 8px 40px rgba(251,191,36,0.5); letter-spacing: 1px;
   }
-  .speed-popup.pop {
-    display: block;
-    animation: popAnim 1.2s ease forwards;
-  }
+  .speed-popup.pop { display: block; animation: popAnim 1.2s ease forwards; }
   @keyframes popAnim {
-    0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
-    20%  { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-    40%  { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
-    75%  { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+    0%   { transform: translate(-50%,-50%) scale(0.6); opacity:0; }
+    20%  { transform: translate(-50%,-50%) scale(1.1); opacity:1; }
+    40%  { transform: translate(-50%,-50%) scale(1.0); opacity:1; }
+    75%  { transform: translate(-50%,-50%) scale(1.0); opacity:1; }
+    100% { transform: translate(-50%,-50%) scale(0.8); opacity:0; }
   }
-
-  /* ===== MISC ===== */
-  .no-sublevel { color: var(--text3); font-size: 0.9rem; padding: 6px 0; }
 
   @media (max-width: 400px) {
-    .result-stats { grid-template-columns: 1fr; }
     .result-btns { grid-template-columns: 1fr; }
   }
 </style>
@@ -306,50 +332,45 @@
 <body>
 <div class="container">
 
-  <!-- ===== HOME SCREEN ===== -->
-  <div id="homeScreen" class="screen active">
+  <!-- ===== 級マップ ===== -->
+  <div id="gradeMapScreen" class="screen active">
     <div class="title">
       <h1>⚡ 速トレ</h1>
       <p>英検速読トレーナー</p>
     </div>
-
-    <div class="card">
-      <h3>英検の級を選ぶ</h3>
-      <div class="grade-tabs" id="gradeTabs"></div>
-
-      <div class="sublevel-area" id="sublevelArea" style="display:none;">
-        <h3>レベルを選ぶ</h3>
-        <div class="sublevel-btns" id="sublevelBtns"></div>
-      </div>
-    </div>
-
-    <button class="btn-start" id="btnStart" disabled onclick="startQuiz()">⚡ スタート！</button>
+    <div class="grade-map" id="gradeMapCards"></div>
   </div>
 
-  <!-- ===== QUESTION SCREEN ===== -->
+  <!-- ===== ステージマップ ===== -->
+  <div id="stageMapScreen" class="screen">
+    <div class="stage-map-header">
+      <button class="btn-back" onclick="backToGradeMap()">← 級マップ</button>
+      <div class="stage-map-grade" id="stageMapGradeLabel"></div>
+      <div style="width:72px"></div>
+    </div>
+    <div class="stage-path" id="stagePath"></div>
+  </div>
+
+  <!-- ===== 問題 ===== -->
   <div id="questionScreen" class="screen">
     <!-- HUD -->
     <div class="hud">
       <div class="hud-item">
-        <span class="hud-label">問題</span>
-        <span class="hud-value" id="hudQNum">1/8</span>
-      </div>
-      <div class="hud-item">
-        <span class="hud-label">正解</span>
-        <span class="hud-value hud-correct" id="hudCorrect">0</span>
-      </div>
-      <div class="hud-item">
-        <span class="hud-label">連続</span>
-        <span class="hud-value hud-combo" id="hudCombo">🔥0</span>
+        <span class="hud-label">ステージ</span>
+        <span class="hud-value" id="hudQNum">1/3</span>
       </div>
       <div class="hud-item">
         <span class="hud-label">英検</span>
         <span class="hud-value hud-grade" id="hudGrade">5級</span>
       </div>
+      <div class="hud-item">
+        <span class="hud-label">クリア</span>
+        <span class="hud-value hud-cleared" id="hudCleared">0/3</span>
+      </div>
     </div>
 
     <!-- Timer -->
-    <div class="timer-section card">
+    <div class="timer-card">
       <div class="timer-display">
         <span class="timer-elapsed" id="timerElapsed">0:00</span>
         <span class="timer-target" id="timerTarget">目標: 0:30</span>
@@ -372,7 +393,6 @@
     <div class="feedback" id="feedbackDiv">
       <span class="feedback-icon" id="feedbackIcon"></span>
       <span id="feedbackMsg"></span>
-      <span class="feedback-speed" id="feedbackSpeed"></span>
     </div>
 
     <!-- Review buttons (shown after answer) -->
@@ -383,53 +403,42 @@
     <div class="collapse-content" id="translationBox"></div>
     <div class="collapse-content" id="evidenceBox"></div>
 
-    <!-- Next -->
-    <button class="btn-next" id="btnNext" style="display:none;" onclick="nextQuestion()">次の問題へ →</button>
+    <!-- Stage actions (shown after answer) -->
+    <div class="stage-actions" id="stageActions">
+      <button class="btn-next" id="btnStageNext" onclick="stageNext()">次のステージへ →</button>
+      <button class="btn-map" onclick="goToStageMap()">🗺 マップへ戻る</button>
+    </div>
   </div>
 
-  <!-- ===== RESULT SCREEN ===== -->
-  <div id="resultScreen" class="screen">
-    <div class="result-title">
-      <h2 id="resultEmoji"></h2>
-    </div>
-    <div class="result-score-big" id="resultScore"></div>
-    <div class="result-score-label" id="resultScoreLabel"></div>
-    <div class="result-stats">
-      <div class="stat-card">
-        <div class="stat-value" id="statRate"></div>
-        <div class="stat-label">正答率</div>
+  <!-- ===== 級クリア ===== -->
+  <div id="gradeClearScreen" class="screen">
+    <div class="grade-clear-wrap">
+      <div class="grade-clear-star" id="gradeClearStar">🎉</div>
+      <h2 class="grade-clear-title" id="gradeClearTitle">5級 クリア！</h2>
+      <p class="grade-clear-msg" id="gradeClearMsg">全ステージをクリアしました！</p>
+      <div class="result-btns">
+        <button class="btn-result again" id="btnNextGrade" onclick="goNextGrade()">次の級へ →</button>
+        <button class="btn-result home" onclick="backToGradeMap()">🗺 マップへ戻る</button>
       </div>
-      <div class="stat-card">
-        <div class="stat-value" id="statSpeed"></div>
-        <div class="stat-label">目標時間内<br>正解数</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="statPoint"></div>
-        <div class="stat-label">獲得<br>ポイント</div>
-      </div>
-    </div>
-    <div class="result-btns">
-      <button class="btn-result again" onclick="retryQuiz()">🔄 もう一度</button>
-      <button class="btn-result home" onclick="goHome()">🏠 ホームに戻る</button>
     </div>
   </div>
 
 </div>
 
-<!-- Exit button (fixed) -->
+<!-- 終了ボタン（fixed） -->
 <button class="btn-exit" id="btnExit" onclick="exitQuiz()">✕ 終了</button>
 
-<!-- Speed popup -->
+<!-- スピードポップアップ -->
 <div class="speed-popup" id="speedPopup">⚡ スピードボーナス！</div>
 
 <script>
 /* ========================================================
    DATA
 ======================================================== */
-const PASSAGES = [{"id":0,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi is a student. He studies English every day.","japanese_translation":"サトシは学生です。毎日英語を勉強しています。","question":"What does he study?","choice_a":"Math","choice_b":"English","choice_c":"Science","choice_d":"Music","answer":"B","target_time_sec":30,"reading_point":"studies English に注目","evidence_text":"studies English","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi has a dog. The dog is very cute.","japanese_translation":"サトシは犬を飼っています。その犬はとてもかわいいです。","question":"What does he have?","choice_a":"Cat","choice_b":"Dog","choice_c":"Bird","choice_d":"Fish","answer":"B","target_time_sec":30,"reading_point":"has a dog を見る","evidence_text":"has a dog","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi goes to school. He is happy.","japanese_translation":"サトシは学校へ行きます。彼は嬉しいです。","question":"Where does he go?","choice_a":"Park","choice_b":"School","choice_c":"Store","choice_d":"Home","answer":"B","target_time_sec":30,"reading_point":"goes to school が根拠","evidence_text":"goes to school","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi plays soccer. He likes it.","japanese_translation":"サトシはサッカーをします。それが好きです。","question":"What does he play?","choice_a":"Tennis","choice_b":"Soccer","choice_c":"Baseball","choice_d":"Basketball","answer":"B","target_time_sec":30,"reading_point":"plays soccer に注目","evidence_text":"plays soccer","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi reads a book. It is easy.","japanese_translation":"サトシは本を読みます。それは簡単です。","question":"What does he read?","choice_a":"Game","choice_b":"Book","choice_c":"TV","choice_d":"Phone","answer":"B","target_time_sec":30,"reading_point":"reads a book を見る","evidence_text":"reads a book","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi goes to the park after school. He meets Ken there.","japanese_translation":"サトシは放課後に公園へ行きます。そこでケンに会います。","question":"Where does he go?","choice_a":"School","choice_b":"Park","choice_c":"Store","choice_d":"Home","answer":"B","target_time_sec":35,"reading_point":"goes to the park が根拠","evidence_text":"goes to the park","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi studies math and English. He has a test tomorrow.","japanese_translation":"サトシは数学と英語を勉強しています。明日テストがあります。","question":"What does he study?","choice_a":"Math and English","choice_b":"Science","choice_c":"Music","choice_d":"Art","answer":"A","target_time_sec":35,"reading_point":"studies math and English","evidence_text":"studies math and English","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi eats lunch at school. He eats with his friends.","japanese_translation":"サトシは学校で昼ごはんを食べます。友達と一緒に食べます。","question":"Where does he eat lunch?","choice_a":"Home","choice_b":"Park","choice_c":"School","choice_d":"Store","answer":"C","target_time_sec":35,"reading_point":"eats lunch at school","evidence_text":"eats lunch at school","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi has a sister. Her name is Yuki.","japanese_translation":"サトシには妹がいます。名前はユキです。","question":"What is her name?","choice_a":"Hana","choice_b":"Yuki","choice_c":"Miki","choice_d":"Yui","answer":"B","target_time_sec":35,"reading_point":"name is Yuki","evidence_text":"name is Yuki","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi watches TV at night. He likes movies.","japanese_translation":"サトシは夜にテレビを見ます。映画が好きです。","question":"What does he like?","choice_a":"Books","choice_b":"Movies","choice_c":"Music","choice_d":"Games","answer":"B","target_time_sec":35,"reading_point":"likes movies","evidence_text":"likes movies","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi goes to a juku after school. He studies English there.","japanese_translation":"サトシは放課後に塾へ行きます。そこで英語を勉強します。","question":"Where does he go after school?","choice_a":"Park","choice_b":"Juku","choice_c":"Home","choice_d":"Store","answer":"B","target_time_sec":40,"reading_point":"goes to a juku","evidence_text":"goes to a juku","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi gets up early. He runs in the park every morning.","japanese_translation":"サトシは早く起きます。毎朝公園で走ります。","question":"When does he run?","choice_a":"Morning","choice_b":"Afternoon","choice_c":"Night","choice_d":"Evening","answer":"A","target_time_sec":40,"reading_point":"every morning","evidence_text":"every morning","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi studies hard because he has a test. He wants good grades.","japanese_translation":"サトシはテストがあるので一生懸命勉強します。良い成績を取りたいと思っています。","question":"Why does he study hard?","choice_a":"He is bored","choice_b":"He has a test","choice_c":"He is sick","choice_d":"He is busy","answer":"B","target_time_sec":40,"reading_point":"because he has a test","evidence_text":"because he has a test","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi plays soccer with his friends. They enjoy it very much.","japanese_translation":"サトシは友達とサッカーをします。とても楽しんでいます。","question":"Who does he play with?","choice_a":"Teacher","choice_b":"Family","choice_c":"Friends","choice_d":"Alone","answer":"C","target_time_sec":40,"reading_point":"with his friends","evidence_text":"with his friends","reward_point":10},{"id":0,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi reads an English book. It is a little difficult but interesting.","japanese_translation":"サトシは英語の本を読みます。少し難しいですが面白いです。","question":"How is the book?","choice_a":"Easy","choice_b":"Boring","choice_c":"Difficult and interesting","choice_d":"Short","answer":"C","target_time_sec":40,"reading_point":"difficult but interesting","evidence_text":"difficult but interesting","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi has a test today. He studies English in the morning. He wants to do well.","japanese_translation":"サトシは今日テストがあります。朝に英語を勉強します。良い結果を出したいと思っています。","question":"When does he study English?","choice_a":"At night","choice_b":"In the morning","choice_c":"In the afternoon","choice_d":"At school","answer":"B","target_time_sec":40,"reading_point":"in the morning に注目","evidence_text":"in the morning","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi goes to the library after school. He reads books there. It is quiet.","japanese_translation":"サトシは放課後に図書館へ行きます。そこで本を読みます。静かです。","question":"Where does he go after school?","choice_a":"Park","choice_b":"Library","choice_c":"Store","choice_d":"Home","answer":"B","target_time_sec":40,"reading_point":"goes to the library","evidence_text":"goes to the library","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi plays soccer every Sunday. He likes playing with his friends.","japanese_translation":"サトシは毎週日曜日にサッカーをします。友達とプレーするのが好きです。","question":"When does he play soccer?","choice_a":"Saturday","choice_b":"Sunday","choice_c":"Monday","choice_d":"Friday","answer":"B","target_time_sec":40,"reading_point":"every Sunday","evidence_text":"every Sunday","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi eats dinner with his family. They talk about school.","japanese_translation":"サトシは家族と夕食を食べます。学校の話をします。","question":"Who does he eat with?","choice_a":"Friends","choice_b":"Teacher","choice_c":"Family","choice_d":"Alone","answer":"C","target_time_sec":40,"reading_point":"with his family","evidence_text":"with his family","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi studies math and English every day. He wants to be a good student.","japanese_translation":"サトシは毎日数学と英語を勉強します。良い生徒になりたいと思っています。","question":"What does he study?","choice_a":"Math and English","choice_b":"Science","choice_c":"Music","choice_d":"Art","answer":"A","target_time_sec":40,"reading_point":"studies math and English","evidence_text":"studies math and English","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi goes to a juku three times a week. He studies English there. His teacher is kind.","japanese_translation":"サトシは週に3回塾へ行きます。そこで英語を勉強します。先生は優しいです。","question":"How often does he go to juku?","choice_a":"Once a week","choice_b":"Twice a week","choice_c":"Three times a week","choice_d":"Every day","answer":"C","target_time_sec":45,"reading_point":"three times a week","evidence_text":"three times a week","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi gets up at 7 every morning. He eats breakfast and goes to school.","japanese_translation":"サトシは毎朝7時に起きます。朝ごはんを食べて学校へ行きます。","question":"What time does he get up?","choice_a":"6","choice_b":"7","choice_c":"8","choice_d":"9","answer":"B","target_time_sec":45,"reading_point":"gets up at 7","evidence_text":"gets up at 7","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi likes English because it is interesting. He studies it every day.","japanese_translation":"サトシは英語が面白いので好きです。毎日勉強しています。","question":"Why does he like English?","choice_a":"It is easy","choice_b":"It is interesting","choice_c":"It is hard","choice_d":"It is boring","answer":"B","target_time_sec":45,"reading_point":"because it is interesting","evidence_text":"because it is interesting","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi plays soccer after school. He practices with his team.","japanese_translation":"サトシは放課後にサッカーをします。チームで練習します。","question":"Who does he practice with?","choice_a":"Friends","choice_b":"Team","choice_c":"Family","choice_d":"Teacher","answer":"B","target_time_sec":45,"reading_point":"with his team","evidence_text":"with his team","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi reads English books. They are a little difficult but fun.","japanese_translation":"サトシは英語の本を読みます。少し難しいですが楽しいです。","question":"How are the books?","choice_a":"Easy","choice_b":"Difficult but fun","choice_c":"Boring","choice_d":"Long","answer":"B","target_time_sec":45,"reading_point":"difficult but fun","evidence_text":"difficult but fun","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi was busy yesterday. He had a test at school and studied at home.","japanese_translation":"サトシは昨日忙しかったです。学校でテストがあり、家で勉強しました。","question":"Why was he busy?","choice_a":"He played games","choice_b":"He had a test","choice_c":"He was sick","choice_d":"He watched TV","answer":"B","target_time_sec":50,"reading_point":"had a test","evidence_text":"had a test","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi went to the park with his friends. They played soccer and had fun.","japanese_translation":"サトシは友達と公園へ行きました。サッカーをして楽しみました。","question":"What did they do?","choice_a":"Studied","choice_b":"Played soccer","choice_c":"Watched TV","choice_d":"Slept","answer":"B","target_time_sec":50,"reading_point":"played soccer","evidence_text":"played soccer","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi studied English last night because he has a test today.","japanese_translation":"サトシは今日テストがあるので昨夜英語を勉強しました。","question":"Why did he study?","choice_a":"He was bored","choice_b":"He has a test","choice_c":"He likes games","choice_d":"He is free","answer":"B","target_time_sec":50,"reading_point":"because he has a test","evidence_text":"because he has a test","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi wants to visit America someday. He studies English for that.","japanese_translation":"サトシはいつかアメリカに行きたいと思っています。そのために英語を勉強しています。","question":"Why does he study English?","choice_a":"For fun","choice_b":"For travel","choice_c":"For games","choice_d":"For music","answer":"B","target_time_sec":50,"reading_point":"for that","evidence_text":"for that","reward_point":10},{"id":0,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi enjoys studying English with his friends. They help each other.","japanese_translation":"サトシは友達と英語を勉強するのを楽しんでいます。お互いに助け合っています。","question":"What do they do?","choice_a":"Fight","choice_b":"Help each other","choice_c":"Ignore","choice_d":"Play games","answer":"B","target_time_sec":50,"reading_point":"help each other","evidence_text":"help each other","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi studies English every day because he wants to speak with people from other countries. He enjoys learning new words.","japanese_translation":"サトシは外国の人と話したいので毎日英語を勉強しています。新しい単語を覚えるのを楽しんでいます。","question":"Why does he study English?","choice_a":"For tests","choice_b":"To speak with people","choice_c":"For fun only","choice_d":"To play games","answer":"B","target_time_sec":55,"reading_point":"wants to speak with people に注目","evidence_text":"wants to speak with people","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi went to the library yesterday. He borrowed two English books and started reading them at home.","japanese_translation":"サトシは昨日図書館へ行きました。英語の本を2冊借りて家で読み始めました。","question":"What did he do at the library?","choice_a":"Studied math","choice_b":"Borrowed books","choice_c":"Met friends","choice_d":"Played games","answer":"B","target_time_sec":55,"reading_point":"borrowed two English books","evidence_text":"borrowed two English books","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi likes watching English movies. He listens carefully to understand the story.","japanese_translation":"サトシは英語の映画を見るのが好きです。話を理解するために注意深く聞きます。","question":"Why does he listen carefully?","choice_a":"To sleep","choice_b":"To understand","choice_c":"To relax","choice_d":"To read","answer":"B","target_time_sec":55,"reading_point":"to understand the story","evidence_text":"to understand the story","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi gets up early on weekends. He studies for an hour before breakfast.","japanese_translation":"サトシは週末は早く起きます。朝ごはんの前に1時間勉強します。","question":"When does he study?","choice_a":"After breakfast","choice_b":"Before breakfast","choice_c":"At night","choice_d":"At school","answer":"B","target_time_sec":55,"reading_point":"before breakfast","evidence_text":"before breakfast","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi has many friends at school. He often studies with them after class.","japanese_translation":"サトシは学校にたくさんの友達がいます。授業のあとによく一緒に勉強します。","question":"What does he do after class?","choice_a":"Plays games","choice_b":"Studies with friends","choice_c":"Goes home","choice_d":"Eats dinner","answer":"B","target_time_sec":55,"reading_point":"studies with them after class","evidence_text":"studies with them after class","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi was very busy last week because he had many tests. He studied hard every night to prepare for them.","japanese_translation":"サトシは先週テストが多くてとても忙しかったです。それらのために毎晩一生懸命勉強しました。","question":"Why was he busy?","choice_a":"He had many tests","choice_b":"He played sports","choice_c":"He was sick","choice_d":"He traveled","answer":"A","target_time_sec":60,"reading_point":"because he had many tests","evidence_text":"because he had many tests","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi joined the English club at school. He practices speaking with other students every day.","japanese_translation":"サトシは学校の英語クラブに入りました。他の生徒と毎日話す練習をしています。","question":"What does he practice?","choice_a":"Writing","choice_b":"Speaking","choice_c":"Reading","choice_d":"Listening","answer":"B","target_time_sec":60,"reading_point":"practices speaking","evidence_text":"practices speaking","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi wants to study abroad in the future. He believes English will help him achieve his dream.","japanese_translation":"サトシは将来留学したいと思っています。英語が夢の達成に役立つと信じています。","question":"Why does he study English?","choice_a":"For fun","choice_b":"For travel only","choice_c":"To achieve his dream","choice_d":"To sleep","answer":"C","target_time_sec":60,"reading_point":"help him achieve his dream","evidence_text":"help him achieve his dream","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi watched an English program on TV. Although it was difficult, he understood some parts.","japanese_translation":"サトシはテレビで英語の番組を見ました。難しかったですが一部は理解できました。","question":"How was the program?","choice_a":"Easy","choice_b":"Boring","choice_c":"Difficult","choice_d":"Short","answer":"C","target_time_sec":60,"reading_point":"it was difficult","evidence_text":"it was difficult","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi studies English with his teacher after school. His teacher gives him useful advice.","japanese_translation":"サトシは放課後に先生と英語を勉強します。先生は役立つアドバイスをくれます。","question":"What does his teacher give him?","choice_a":"Homework","choice_b":"Advice","choice_c":"Food","choice_d":"Books","answer":"B","target_time_sec":60,"reading_point":"gives him useful advice","evidence_text":"gives him useful advice","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi failed an English test last month, but he did not give up. He studied harder and improved his score in the next test.","japanese_translation":"サトシは先月英語のテストに失敗しましたが、あきらめませんでした。もっと勉強して次のテストで成績を上げました。","question":"What did he do after failing?","choice_a":"Gave up","choice_b":"Studied harder","choice_c":"Played games","choice_d":"Slept","answer":"B","target_time_sec":65,"reading_point":"studied harder","evidence_text":"studied harder","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi reads English articles online. At first, he could not understand them well, but now he can read them more easily.","japanese_translation":"サトシはオンラインで英語の記事を読みます。最初はよく分かりませんでしたが、今はもっと簡単に読めます。","question":"How is he now?","choice_a":"Cannot read","choice_b":"Reads easily","choice_c":"Does not try","choice_d":"Hates English","answer":"B","target_time_sec":65,"reading_point":"now he can read them more easily","evidence_text":"now he can read them more easily","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi thinks studying English is important because it helps him communicate with people around the world.","japanese_translation":"サトシは英語の勉強は大切だと思っています。世界中の人とコミュニケーションできるからです。","question":"Why is English important?","choice_a":"For games","choice_b":"For communication","choice_c":"For sleep","choice_d":"For school only","answer":"B","target_time_sec":65,"reading_point":"helps him communicate","evidence_text":"helps him communicate","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi tried to watch an English movie without subtitles. It was difficult, but he enjoyed the challenge.","japanese_translation":"サトシは字幕なしで英語の映画を見ようとしました。難しかったですが挑戦を楽しみました。","question":"How did he feel?","choice_a":"Bored","choice_b":"Angry","choice_c":"Enjoyed it","choice_d":"Sad","answer":"C","target_time_sec":65,"reading_point":"enjoyed the challenge","evidence_text":"enjoyed the challenge","reward_point":10},{"id":0,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi studies English every day even when he is tired. He believes that practice is the key to success.","japanese_translation":"サトシは疲れていても毎日英語を勉強します。練習が成功の鍵だと信じています。","question":"What does he believe?","choice_a":"Practice is important","choice_b":"English is easy","choice_c":"Study is boring","choice_d":"Sleep is best","answer":"A","target_time_sec":65,"reading_point":"practice is the key","evidence_text":"practice is the key","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi has been interested in English since he was in elementary school. He enjoys learning new expressions and using them in conversations.","japanese_translation":"サトシは小学生の頃から英語に興味を持っています。新しい表現を学び、それを会話で使うことを楽しんでいます。","question":"What does he enjoy?","choice_a":"Watching TV","choice_b":"Learning and using English","choice_c":"Playing games","choice_d":"Reading only","answer":"B","target_time_sec":70,"reading_point":"enjoys learning new expressions","evidence_text":"enjoys learning new expressions","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi practices speaking English every day so that he can communicate better with others. He often talks with his friends in English.","japanese_translation":"サトシは他の人とよりよくコミュニケーションを取れるように毎日英語を話す練習をしています。よく友達と英語で話します。","question":"Why does he practice?","choice_a":"For tests","choice_b":"To communicate better","choice_c":"For fun only","choice_d":"To read books","answer":"B","target_time_sec":70,"reading_point":"so that he can communicate better","evidence_text":"so that he can communicate better","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi joined an English club at school. He was nervous at first, but he became more confident over time.","japanese_translation":"サトシは学校の英語クラブに入りました。最初は緊張していましたが、次第に自信がついてきました。","question":"How did he feel at first?","choice_a":"Happy","choice_b":"Nervous","choice_c":"Excited","choice_d":"Angry","answer":"B","target_time_sec":70,"reading_point":"was nervous at first","evidence_text":"was nervous at first","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi watches English videos online. He tries to understand them without using subtitles.","japanese_translation":"サトシはオンラインで英語の動画を見ます。字幕を使わずに理解しようとしています。","question":"What does he try to do?","choice_a":"Read books","choice_b":"Understand videos without subtitles","choice_c":"Write essays","choice_d":"Speak Japanese","answer":"B","target_time_sec":70,"reading_point":"without using subtitles","evidence_text":"without using subtitles","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi studies English every day because he wants to travel abroad in the future. He is especially interested in visiting the United States.","japanese_translation":"サトシは将来海外旅行をしたいので毎日英語を勉強しています。特にアメリカに興味があります。","question":"Why does he study English?","choice_a":"For school","choice_b":"To travel abroad","choice_c":"To watch TV","choice_d":"To play sports","answer":"B","target_time_sec":70,"reading_point":"wants to travel abroad","evidence_text":"wants to travel abroad","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi has improved his English skills by studying every day. Although he sometimes feels tired, he continues his efforts because he believes it will help him in the future.","japanese_translation":"サトシは毎日勉強することで英語力を伸ばしてきました。時々疲れることもありますが、将来役に立つと信じて努力を続けています。","question":"Why does he continue studying?","choice_a":"He is forced","choice_b":"He believes it will help him","choice_c":"He is bored","choice_d":"He likes tests","answer":"B","target_time_sec":75,"reading_point":"believes it will help him","evidence_text":"believes it will help him","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi decided to study English more seriously after he talked with a foreign student. He realized that communication is important.","japanese_translation":"サトシは外国人の生徒と話した後、もっと真剣に英語を勉強しようと決めました。コミュニケーションが大切だと気づきました。","question":"What made him decide?","choice_a":"A test","choice_b":"A teacher","choice_c":"Talking with a foreign student","choice_d":"Watching TV","answer":"C","target_time_sec":75,"reading_point":"talked with a foreign student","evidence_text":"talked with a foreign student","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi reads English books to improve his vocabulary. He writes down new words and reviews them regularly.","japanese_translation":"サトシは語彙を増やすために英語の本を読みます。新しい単語を書き留め、定期的に復習します。","question":"What does he do with new words?","choice_a":"Ignores them","choice_b":"Writes them down","choice_c":"Forgets them","choice_d":"Hides them","answer":"B","target_time_sec":75,"reading_point":"writes down new words","evidence_text":"writes down new words","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi sometimes watches English movies with subtitles. This helps him understand the story better and learn new expressions.","japanese_translation":"サトシは時々字幕付きで英語の映画を見ます。これにより話の理解が深まり、新しい表現を学べます。","question":"Why does he watch with subtitles?","choice_a":"To sleep","choice_b":"To understand better","choice_c":"To relax","choice_d":"To finish quickly","answer":"B","target_time_sec":75,"reading_point":"helps him understand the story","evidence_text":"helps him understand the story","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi practices English with his friends. They correct each other's mistakes and learn together.","japanese_translation":"サトシは友達と英語の練習をします。お互いの間違いを直し合いながら学びます。","question":"What do they do?","choice_a":"Compete only","choice_b":"Correct mistakes","choice_c":"Play games","choice_d":"Ignore errors","answer":"B","target_time_sec":75,"reading_point":"correct each other's mistakes","evidence_text":"correct each other's mistakes","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi used to dislike English, but his opinion changed after he met a teacher who made learning fun. Now he studies every day with interest.","japanese_translation":"サトシは以前英語が嫌いでしたが、楽しく教えてくれる先生に出会って考えが変わりました。今では興味を持って毎日勉強しています。","question":"Why did his opinion change?","choice_a":"He failed a test","choice_b":"He met a good teacher","choice_c":"He traveled abroad","choice_d":"He read a book","answer":"B","target_time_sec":80,"reading_point":"met a teacher who made learning fun","evidence_text":"met a teacher who made learning fun","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi has been studying English for many years. As a result, he can now understand movies without subtitles.","japanese_translation":"サトシは何年も英語を勉強してきました。その結果、今では字幕なしで映画を理解できます。","question":"What can he do now?","choice_a":"Write books","choice_b":"Understand movies","choice_c":"Teach others","choice_d":"Travel alone","answer":"B","target_time_sec":80,"reading_point":"understand movies without subtitles","evidence_text":"understand movies without subtitles","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi thinks that making mistakes is important for learning. He is not afraid of speaking English anymore.","japanese_translation":"サトシは間違えることは学習に大切だと考えています。もう英語を話すことを怖がっていません。","question":"What does he think?","choice_a":"Mistakes are bad","choice_b":"Mistakes are important","choice_c":"English is easy","choice_d":"Speaking is useless","answer":"B","target_time_sec":80,"reading_point":"making mistakes is important","evidence_text":"making mistakes is important","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi tries to use English in his daily life. For example, he writes a diary in English and listens to English music.","japanese_translation":"サトシは日常生活で英語を使うようにしています。例えば英語で日記を書いたり音楽を聞いたりしています。","question":"What does he do daily?","choice_a":"Plays games","choice_b":"Uses English","choice_c":"Watches TV","choice_d":"Sleeps early","answer":"B","target_time_sec":80,"reading_point":"use English in his daily life","evidence_text":"use English in his daily life","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi believes that learning English will open many doors in the future. Therefore, he studies hard every day.","japanese_translation":"サトシは英語を学ぶことで将来多くの可能性が広がると信じています。そのため毎日一生懸命勉強しています。","question":"Why does he study hard?","choice_a":"He is forced","choice_b":"He believes it opens doors","choice_c":"He likes homework","choice_d":"He is bored","answer":"B","target_time_sec":80,"reading_point":"will open many doors","evidence_text":"will open many doors","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi has recently become interested in studying abroad. He started collecting information about schools in English-speaking countries.","japanese_translation":"サトシは最近留学に興味を持つようになりました。英語圏の学校について情報を集め始めました。","question":"What did he start doing?","choice_a":"Watching movies","choice_b":"Collecting information","choice_c":"Playing games","choice_d":"Reading novels","answer":"B","target_time_sec":85,"reading_point":"started collecting information","evidence_text":"started collecting information","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi is improving his English skills by using online learning tools. He practices listening and speaking every day.","japanese_translation":"サトシはオンライン学習ツールを使って英語力を伸ばしています。毎日リスニングとスピーキングを練習しています。","question":"How is he improving his skills?","choice_a":"By reading books","choice_b":"By using online tools","choice_c":"By sleeping","choice_d":"By traveling","answer":"B","target_time_sec":85,"reading_point":"using online learning tools","evidence_text":"using online learning tools","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi attended an English workshop last weekend. He met many students who share the same interest.","japanese_translation":"サトシは先週末英語のワークショップに参加しました。同じ興味を持つ多くの生徒に出会いました。","question":"What did he do last weekend?","choice_a":"Studied alone","choice_b":"Attended a workshop","choice_c":"Watched TV","choice_d":"Played sports","answer":"B","target_time_sec":85,"reading_point":"attended an English workshop","evidence_text":"attended an English workshop","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi often listens to English podcasts while commuting. This helps him get used to natural speed.","japanese_translation":"サトシは通学中によく英語のポッドキャストを聞きます。自然なスピードに慣れるのに役立っています。","question":"Why does he listen to podcasts?","choice_a":"To relax","choice_b":"To get used to speed","choice_c":"To sleep","choice_d":"To study math","answer":"B","target_time_sec":85,"reading_point":"get used to natural speed","evidence_text":"get used to natural speed","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi is trying to write essays in English. Although it is difficult, he believes it will improve his writing skills.","japanese_translation":"サトシは英語でエッセイを書こうとしています。難しいですが、書く力が伸びると信じています。","question":"What is he trying to do?","choice_a":"Read essays","choice_b":"Write essays","choice_c":"Translate books","choice_d":"Speak only","answer":"B","target_time_sec":85,"reading_point":"trying to write essays","evidence_text":"trying to write essays","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi believes that learning English requires continuous effort. Even when he feels tired, he studies a little every day.","japanese_translation":"サトシは英語の学習には継続的な努力が必要だと考えています。疲れている時でも毎日少しは勉強します。","question":"What does he believe?","choice_a":"Effort is unnecessary","choice_b":"Continuous effort is needed","choice_c":"English is easy","choice_d":"Study is boring","answer":"B","target_time_sec":90,"reading_point":"requires continuous effort","evidence_text":"requires continuous effort","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi joined an online community where people practice English together. He enjoys exchanging ideas with members.","japanese_translation":"サトシは英語を練習するオンラインコミュニティに参加しました。メンバーと意見交換を楽しんでいます。","question":"What does he enjoy?","choice_a":"Watching videos","choice_b":"Exchanging ideas","choice_c":"Playing games","choice_d":"Reading alone","answer":"B","target_time_sec":90,"reading_point":"enjoys exchanging ideas","evidence_text":"enjoys exchanging ideas","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi started keeping a journal in English. At first, he found it difficult, but now he can write more easily.","japanese_translation":"サトシは英語で日記を書き始めました。最初は難しかったですが、今ではより簡単に書けます。","question":"How is he now?","choice_a":"Cannot write","choice_b":"Writes easily","choice_c":"Hates writing","choice_d":"Ignores it","answer":"B","target_time_sec":90,"reading_point":"now he can write more easily","evidence_text":"now he can write more easily","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi sometimes makes mistakes when speaking English. However, he uses them as opportunities to learn.","japanese_translation":"サトシは英語を話すときに時々間違えます。しかし、それを学ぶ機会として活用しています。","question":"How does he see mistakes?","choice_a":"As failures","choice_b":"As opportunities","choice_c":"As problems","choice_d":"As jokes","answer":"B","target_time_sec":90,"reading_point":"uses them as opportunities","evidence_text":"uses them as opportunities","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi watches English news programs to understand global issues. He wants to become more aware of the world.","japanese_translation":"サトシは世界の問題を理解するために英語のニュースを見ます。もっと世界に詳しくなりたいと思っています。","question":"Why does he watch news?","choice_a":"For fun","choice_b":"To understand global issues","choice_c":"To sleep","choice_d":"To relax","answer":"B","target_time_sec":90,"reading_point":"understand global issues","evidence_text":"understand global issues","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi has realized that learning English is not only about memorizing words but also about understanding how to use them in real situations.","japanese_translation":"サトシは英語の学習は単語を覚えるだけでなく、実際の場面での使い方を理解することが大切だと気づきました。","question":"What has he realized?","choice_a":"Words are enough","choice_b":"Usage is important","choice_c":"Grammar is useless","choice_d":"Tests are easy","answer":"B","target_time_sec":95,"reading_point":"understanding how to use them","evidence_text":"understanding how to use them","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi feels more confident speaking English than before. This is because he has practiced regularly for a long time.","japanese_translation":"サトシは以前より英語を話すことに自信がついています。それは長い間継続して練習してきたからです。","question":"Why is he confident?","choice_a":"He is talented","choice_b":"He practiced regularly","choice_c":"He traveled abroad","choice_d":"He watched TV","answer":"B","target_time_sec":95,"reading_point":"practiced regularly","evidence_text":"practiced regularly","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi understands that making mistakes is a natural part of learning. Therefore, he is not afraid to try new expressions.","japanese_translation":"サトシは間違いは学習の自然な一部だと理解しています。そのため新しい表現を試すことを恐れていません。","question":"What is he not afraid of?","choice_a":"Failing tests","choice_b":"Trying new expressions","choice_c":"Speaking Japanese","choice_d":"Studying alone","answer":"B","target_time_sec":95,"reading_point":"not afraid to try new expressions","evidence_text":"not afraid to try new expressions","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi has been using English in his daily life, such as writing messages and reading articles. This has improved his skills significantly.","japanese_translation":"サトシは日常生活で英語を使っています。例えばメッセージを書いたり記事を読んだりしています。その結果、英語力が大きく向上しました。","question":"What improved his skills?","choice_a":"Watching TV","choice_b":"Using English daily","choice_c":"Playing games","choice_d":"Sleeping","answer":"B","target_time_sec":95,"reading_point":"using English in his daily life","evidence_text":"using English in his daily life","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi believes that mastering English will give him more opportunities in the future. He continues studying with strong motivation.","japanese_translation":"サトシは英語を習得することで将来多くの機会が得られると信じています。強い意欲を持って勉強を続けています。","question":"Why does he keep studying?","choice_a":"He is forced","choice_b":"He believes it gives opportunities","choice_c":"He is bored","choice_d":"He has free time","answer":"B","target_time_sec":95,"reading_point":"give him more opportunities","evidence_text":"give him more opportunities","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi has been studying English to prepare for his future career. He believes that being able to communicate in English will give him more opportunities.","japanese_translation":"サトシは将来の仕事に備えて英語を勉強しています。英語でコミュニケーションできることがより多くの機会を与えると信じています。","question":"Why does he study English?","choice_a":"For fun","choice_b":"For his future career","choice_c":"To relax","choice_d":"To travel only","answer":"B","target_time_sec":100,"reading_point":"prepare for his future career","evidence_text":"prepare for his future career","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi often reads English articles about technology. He is interested in how new inventions change our lives.","japanese_translation":"サトシはよく技術に関する英語の記事を読みます。新しい発明がどのように生活を変えるかに興味があります。","question":"What is he interested in?","choice_a":"Sports","choice_b":"Technology","choice_c":"Music","choice_d":"History","answer":"B","target_time_sec":100,"reading_point":"reads English articles about technology","evidence_text":"reads English articles about technology","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi joined an international exchange program. He had a chance to talk with students from different countries.","japanese_translation":"サトシは国際交流プログラムに参加しました。さまざまな国の生徒と話す機会がありました。","question":"What did he do?","choice_a":"Studied alone","choice_b":"Joined a program","choice_c":"Watched TV","choice_d":"Stayed home","answer":"B","target_time_sec":100,"reading_point":"joined an international exchange program","evidence_text":"joined an international exchange program","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi studies English every day, even when he is busy. He thinks consistency is the key to success.","japanese_translation":"サトシは忙しくても毎日英語を勉強します。継続が成功の鍵だと考えています。","question":"What does he think?","choice_a":"Luck is important","choice_b":"Consistency is the key","choice_c":"Talent is enough","choice_d":"Study is boring","answer":"B","target_time_sec":100,"reading_point":"consistency is the key","evidence_text":"consistency is the key","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi listens to English news to improve his listening skills. He also learns about world events at the same time.","japanese_translation":"サトシはリスニング力を高めるために英語のニュースを聞きます。同時に世界の出来事も学びます。","question":"Why does he listen to news?","choice_a":"To relax","choice_b":"To improve listening","choice_c":"To sleep","choice_d":"To read books","answer":"B","target_time_sec":100,"reading_point":"improve his listening skills","evidence_text":"improve his listening skills","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi believes that learning English is essential in today's global society. Without it, he thinks it would be difficult to communicate internationally.","japanese_translation":"サトシは現代のグローバル社会では英語の学習が不可欠だと考えています。それがなければ国際的にコミュニケーションを取るのは難しいと思っています。","question":"What does he believe?","choice_a":"English is unnecessary","choice_b":"English is essential","choice_c":"English is easy","choice_d":"English is boring","answer":"B","target_time_sec":110,"reading_point":"learning English is essential","evidence_text":"learning English is essential","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi has improved his English by practicing regularly. As a result, he can now express his ideas more clearly.","japanese_translation":"サトシは継続的に練習することで英語力を向上させました。その結果、よりはっきりと自分の考えを表現できるようになりました。","question":"What is the result?","choice_a":"He forgot English","choice_b":"He expresses ideas clearly","choice_c":"He stopped studying","choice_d":"He reads less","answer":"B","target_time_sec":110,"reading_point":"express his ideas more clearly","evidence_text":"express his ideas more clearly","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi sometimes feels discouraged when he cannot understand difficult texts. However, he keeps trying because he knows improvement takes time.","japanese_translation":"サトシは難しい文章が理解できないと落ち込むことがあります。しかし、上達には時間がかかると分かっているので努力を続けます。","question":"Why does he keep trying?","choice_a":"He is forced","choice_b":"Improvement takes time","choice_c":"He likes failure","choice_d":"He is bored","answer":"B","target_time_sec":110,"reading_point":"improvement takes time","evidence_text":"improvement takes time","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi reads various types of English materials, such as articles and books, to broaden his knowledge.","japanese_translation":"サトシは知識を広げるために記事や本などさまざまな英語の教材を読みます。","question":"Why does he read various materials?","choice_a":"To sleep","choice_b":"To broaden knowledge","choice_c":"To relax","choice_d":"To pass time","answer":"B","target_time_sec":110,"reading_point":"broaden his knowledge","evidence_text":"broaden his knowledge","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi participates in discussions in English class. This helps him improve both his speaking and thinking skills.","japanese_translation":"サトシは英語の授業でディスカッションに参加します。これにより話す力と思考力の両方が向上します。","question":"What does it help him improve?","choice_a":"Writing only","choice_b":"Speaking and thinking","choice_c":"Listening only","choice_d":"Reading only","answer":"B","target_time_sec":110,"reading_point":"improve both his speaking and thinking","evidence_text":"improve both his speaking and thinking","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi believes that making mistakes is an important part of learning. By analyzing his errors, he can improve his understanding.","japanese_translation":"サトシは間違いは学習の重要な一部だと考えています。ミスを分析することで理解を深めることができます。","question":"What does he do with mistakes?","choice_a":"Ignores them","choice_b":"Analyzes them","choice_c":"Hides them","choice_d":"Avoids them","answer":"B","target_time_sec":120,"reading_point":"analyzing his errors","evidence_text":"analyzing his errors","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi has developed his English skills through constant practice. As a result, he can now communicate confidently with others.","japanese_translation":"サトシは継続的な練習によって英語力を伸ばしました。その結果、自信を持って他人とコミュニケーションできるようになりました。","question":"What can he do now?","choice_a":"Write books","choice_b":"Communicate confidently","choice_c":"Teach classes","choice_d":"Travel alone","answer":"B","target_time_sec":120,"reading_point":"communicate confidently","evidence_text":"communicate confidently","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi thinks that exposure to real English is important. Therefore, he listens to native speakers as much as possible.","japanese_translation":"サトシは実際の英語に触れることが重要だと考えています。そのためできるだけネイティブの英語を聞きます。","question":"What does he try to do?","choice_a":"Avoid English","choice_b":"Listen to native speakers","choice_c":"Read only","choice_d":"Study grammar only","answer":"B","target_time_sec":120,"reading_point":"listens to native speakers","evidence_text":"listens to native speakers","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi understands that language learning requires patience. Even when progress is slow, he continues his efforts.","japanese_translation":"サトシは言語学習には忍耐が必要だと理解しています。進歩が遅くても努力を続けます。","question":"What is required for learning?","choice_a":"Speed","choice_b":"Patience","choice_c":"Talent","choice_d":"Luck","answer":"B","target_time_sec":120,"reading_point":"requires patience","evidence_text":"requires patience","reward_point":10},{"id":0,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi aims to use English in his future job. He studies hard to achieve his goal and gain useful skills.","japanese_translation":"サトシは将来の仕事で英語を使うことを目指しています。目標を達成し役立つスキルを身につけるために一生懸命勉強しています。","question":"Why does he study hard?","choice_a":"For fun","choice_b":"To achieve his goal","choice_c":"To sleep","choice_d":"To relax","answer":"B","target_time_sec":120,"reading_point":"achieve his goal","evidence_text":"achieve his goal","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi has been considering studying abroad to broaden his perspective. He believes that experiencing different cultures will help him grow as a person.","japanese_translation":"サトシは視野を広げるために留学を考えています。異文化を経験することが人としての成長につながると信じています。","question":"Why does he want to study abroad?","choice_a":"To relax","choice_b":"To broaden his perspective","choice_c":"To play sports","choice_d":"To meet friends","answer":"B","target_time_sec":130,"reading_point":"broaden his perspective","evidence_text":"broaden his perspective","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi reads English newspapers to stay informed about global issues. He wants to understand different viewpoints.","japanese_translation":"サトシは世界の問題について知るために英字新聞を読みます。さまざまな視点を理解したいと考えています。","question":"Why does he read newspapers?","choice_a":"To relax","choice_b":"To understand viewpoints","choice_c":"To play games","choice_d":"To sleep","answer":"B","target_time_sec":130,"reading_point":"understand different viewpoints","evidence_text":"understand different viewpoints","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi believes that effective communication requires not only language skills but also cultural understanding.","japanese_translation":"サトシは効果的なコミュニケーションには語学力だけでなく文化理解も必要だと考えています。","question":"What does communication require?","choice_a":"Only grammar","choice_b":"Only vocabulary","choice_c":"Language and culture","choice_d":"Only speaking","answer":"C","target_time_sec":130,"reading_point":"language skills but also cultural understanding","evidence_text":"language skills but also cultural understanding","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi has been improving his English by engaging in discussions on various topics. This has enhanced his critical thinking skills.","japanese_translation":"サトシはさまざまな話題について議論することで英語力を高めています。これにより批判的思考力も向上しました。","question":"What has improved besides English?","choice_a":"Memory","choice_b":"Critical thinking","choice_c":"Writing speed","choice_d":"Reading only","answer":"B","target_time_sec":130,"reading_point":"enhanced his critical thinking skills","evidence_text":"enhanced his critical thinking skills","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi tries to read complex English texts, even if he does not understand everything. He believes that exposure is important.","japanese_translation":"サトシはすべて理解できなくても難しい英語の文章を読むようにしています。触れることが重要だと考えています。","question":"What does he believe?","choice_a":"Perfection is needed","choice_b":"Exposure is important","choice_c":"English is easy","choice_d":"Study is boring","answer":"B","target_time_sec":130,"reading_point":"exposure is important","evidence_text":"exposure is important","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi has realized that learning a language involves more than memorizing vocabulary. It requires understanding context and nuance.","japanese_translation":"サトシは言語学習は単語暗記以上のものであり、文脈やニュアンスの理解が必要だと気づきました。","question":"What is required?","choice_a":"Memorization only","choice_b":"Context and nuance","choice_c":"Grammar only","choice_d":"Speaking only","answer":"B","target_time_sec":140,"reading_point":"understanding context and nuance","evidence_text":"understanding context and nuance","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi participates in debates to improve his ability to express opinions clearly. This has helped him become more confident.","japanese_translation":"サトシは意見を明確に表現する力を高めるためにディベートに参加しています。これにより自信がつきました。","question":"Why does he join debates?","choice_a":"To relax","choice_b":"To express opinions","choice_c":"To listen only","choice_d":"To read","answer":"B","target_time_sec":140,"reading_point":"express opinions clearly","evidence_text":"express opinions clearly","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi often analyzes his mistakes to identify patterns. This allows him to avoid making the same errors again.","japanese_translation":"サトシはミスのパターンを見つけるために分析します。これにより同じ間違いを防げます。","question":"Why does he analyze mistakes?","choice_a":"To forget them","choice_b":"To identify patterns","choice_c":"To relax","choice_d":"To stop studying","answer":"B","target_time_sec":140,"reading_point":"identify patterns","evidence_text":"identify patterns","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi believes that motivation plays a key role in language learning. Without it, progress would be difficult.","japanese_translation":"サトシは語学学習においてモチベーションが重要な役割を果たすと考えています。それがなければ上達は難しいです。","question":"What is important?","choice_a":"Talent","choice_b":"Motivation","choice_c":"Luck","choice_d":"Time only","answer":"B","target_time_sec":140,"reading_point":"motivation plays a key role","evidence_text":"motivation plays a key role","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi reads academic articles to improve his comprehension skills. Although they are challenging, he finds them rewarding.","japanese_translation":"サトシは読解力を高めるために学術的な記事を読みます。難しいですがやりがいを感じています。","question":"How does he feel?","choice_a":"Bored","choice_b":"Rewarded","choice_c":"Angry","choice_d":"Confused","answer":"B","target_time_sec":140,"reading_point":"finds them rewarding","evidence_text":"finds them rewarding","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi believes that language is a tool for connecting people across cultures. Therefore, he aims to use English to contribute to society in the future.","japanese_translation":"サトシは言語は文化を超えて人々をつなぐ道具だと考えています。そのため将来は英語を使って社会に貢献したいと考えています。","question":"What is his goal?","choice_a":"To relax","choice_b":"To contribute to society","choice_c":"To play sports","choice_d":"To study alone","answer":"B","target_time_sec":150,"reading_point":"contribute to society","evidence_text":"contribute to society","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi has developed a habit of reflecting on his learning process. This helps him understand his strengths and weaknesses.","japanese_translation":"サトシは学習を振り返る習慣を身につけました。これにより自分の強みと弱みを理解できます。","question":"What does reflection help him do?","choice_a":"Sleep better","choice_b":"Understand strengths","choice_c":"Forget mistakes","choice_d":"Avoid study","answer":"B","target_time_sec":150,"reading_point":"understand his strengths and weaknesses","evidence_text":"understand his strengths and weaknesses","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi understands that mastering a language takes time and dedication. He remains patient and continues his efforts.","japanese_translation":"サトシは言語習得には時間と努力が必要だと理解しています。忍耐強く努力を続けています。","question":"What is needed?","choice_a":"Speed","choice_b":"Time and dedication","choice_c":"Luck","choice_d":"Talent only","answer":"B","target_time_sec":150,"reading_point":"takes time and dedication","evidence_text":"takes time and dedication","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi values communication over perfection. He believes that conveying ideas clearly is more important than making no mistakes.","japanese_translation":"サトシは完璧さよりもコミュニケーションを重視しています。間違えないことよりも考えを伝えることが大切だと考えています。","question":"What does he value?","choice_a":"Perfection","choice_b":"Communication","choice_c":"Grammar","choice_d":"Silence","answer":"B","target_time_sec":150,"reading_point":"communication over perfection","evidence_text":"communication over perfection","reward_point":10},{"id":0,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi aims to become a global professional. He studies English and other skills to prepare for future challenges.","japanese_translation":"サトシは国際的に活躍する人材になることを目指しています。将来の課題に備えて英語や他のスキルを学んでいます。","question":"What is his aim?","choice_a":"To relax","choice_b":"To become global","choice_c":"To travel only","choice_d":"To study less","answer":"B","target_time_sec":150,"reading_point":"become a global professional","evidence_text":"become a global professional","reward_point":10}];
+const PASSAGES = [{"id":0,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi is a student. He studies English every day.","japanese_translation":"サトシは学生です。毎日英語を勉強しています。","question":"What does he study?","choice_a":"Math","choice_b":"English","choice_c":"Science","choice_d":"Music","answer":"B","target_time_sec":30,"reading_point":"studies English に注目","evidence_text":"studies English","reward_point":10},{"id":1,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi has a dog. The dog is very cute.","japanese_translation":"サトシは犬を飼っています。その犬はとてもかわいいです。","question":"What does he have?","choice_a":"Cat","choice_b":"Dog","choice_c":"Bird","choice_d":"Fish","answer":"B","target_time_sec":30,"reading_point":"has a dog を見る","evidence_text":"has a dog","reward_point":10},{"id":2,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi goes to school. He is happy.","japanese_translation":"サトシは学校へ行きます。彼は嬉しいです。","question":"Where does he go?","choice_a":"Park","choice_b":"School","choice_c":"Store","choice_d":"Home","answer":"B","target_time_sec":30,"reading_point":"goes to school が根拠","evidence_text":"goes to school","reward_point":10},{"id":3,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi plays soccer. He likes it.","japanese_translation":"サトシはサッカーをします。それが好きです。","question":"What does he play?","choice_a":"Tennis","choice_b":"Soccer","choice_c":"Baseball","choice_d":"Basketball","answer":"B","target_time_sec":30,"reading_point":"plays soccer に注目","evidence_text":"plays soccer","reward_point":10},{"id":4,"type":"reading","eiken_grade":"5","sub_level":1,"passage":"Satoshi reads a book. It is easy.","japanese_translation":"サトシは本を読みます。それは簡単です。","question":"What does he read?","choice_a":"Game","choice_b":"Book","choice_c":"TV","choice_d":"Phone","answer":"B","target_time_sec":30,"reading_point":"reads a book を見る","evidence_text":"reads a book","reward_point":10},{"id":5,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi goes to the park after school. He meets Ken there.","japanese_translation":"サトシは放課後に公園へ行きます。そこでケンに会います。","question":"Where does he go?","choice_a":"School","choice_b":"Park","choice_c":"Store","choice_d":"Home","answer":"B","target_time_sec":35,"reading_point":"goes to the park が根拠","evidence_text":"goes to the park","reward_point":10},{"id":6,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi studies math and English. He has a test tomorrow.","japanese_translation":"サトシは数学と英語を勉強しています。明日テストがあります。","question":"What does he study?","choice_a":"Math and English","choice_b":"Science","choice_c":"Music","choice_d":"Art","answer":"A","target_time_sec":35,"reading_point":"studies math and English","evidence_text":"studies math and English","reward_point":10},{"id":7,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi eats lunch at school. He eats with his friends.","japanese_translation":"サトシは学校で昼ごはんを食べます。友達と一緒に食べます。","question":"Where does he eat lunch?","choice_a":"Home","choice_b":"Park","choice_c":"School","choice_d":"Store","answer":"C","target_time_sec":35,"reading_point":"eats lunch at school","evidence_text":"eats lunch at school","reward_point":10},{"id":8,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi has a sister. Her name is Yuki.","japanese_translation":"サトシには妹がいます。名前はユキです。","question":"What is her name?","choice_a":"Hana","choice_b":"Yuki","choice_c":"Miki","choice_d":"Yui","answer":"B","target_time_sec":35,"reading_point":"name is Yuki","evidence_text":"name is Yuki","reward_point":10},{"id":9,"type":"reading","eiken_grade":"5","sub_level":2,"passage":"Satoshi watches TV at night. He likes movies.","japanese_translation":"サトシは夜にテレビを見ます。映画が好きです。","question":"What does he like?","choice_a":"Books","choice_b":"Movies","choice_c":"Music","choice_d":"Games","answer":"B","target_time_sec":35,"reading_point":"likes movies","evidence_text":"likes movies","reward_point":10},{"id":10,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi goes to a juku after school. He studies English there.","japanese_translation":"サトシは放課後に塾へ行きます。そこで英語を勉強します。","question":"Where does he go after school?","choice_a":"Park","choice_b":"Juku","choice_c":"Home","choice_d":"Store","answer":"B","target_time_sec":40,"reading_point":"goes to a juku","evidence_text":"goes to a juku","reward_point":10},{"id":11,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi gets up early. He runs in the park every morning.","japanese_translation":"サトシは早く起きます。毎朝公園で走ります。","question":"When does he run?","choice_a":"Morning","choice_b":"Afternoon","choice_c":"Night","choice_d":"Evening","answer":"A","target_time_sec":40,"reading_point":"every morning","evidence_text":"every morning","reward_point":10},{"id":12,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi studies hard because he has a test. He wants good grades.","japanese_translation":"サトシはテストがあるので一生懸命勉強します。良い成績を取りたいと思っています。","question":"Why does he study hard?","choice_a":"He is bored","choice_b":"He has a test","choice_c":"He is sick","choice_d":"He is busy","answer":"B","target_time_sec":40,"reading_point":"because he has a test","evidence_text":"because he has a test","reward_point":10},{"id":13,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi plays soccer with his friends. They enjoy it very much.","japanese_translation":"サトシは友達とサッカーをします。とても楽しんでいます。","question":"Who does he play with?","choice_a":"Teacher","choice_b":"Family","choice_c":"Friends","choice_d":"Alone","answer":"C","target_time_sec":40,"reading_point":"with his friends","evidence_text":"with his friends","reward_point":10},{"id":14,"type":"reading","eiken_grade":"5","sub_level":3,"passage":"Satoshi reads an English book. It is a little difficult but interesting.","japanese_translation":"サトシは英語の本を読みます。少し難しいですが面白いです。","question":"How is the book?","choice_a":"Easy","choice_b":"Boring","choice_c":"Difficult and interesting","choice_d":"Short","answer":"C","target_time_sec":40,"reading_point":"difficult but interesting","evidence_text":"difficult but interesting","reward_point":10},{"id":15,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi has a test today. He studies English in the morning. He wants to do well.","japanese_translation":"サトシは今日テストがあります。朝に英語を勉強します。良い結果を出したいと思っています。","question":"When does he study English?","choice_a":"At night","choice_b":"In the morning","choice_c":"In the afternoon","choice_d":"At school","answer":"B","target_time_sec":40,"reading_point":"in the morning に注目","evidence_text":"in the morning","reward_point":10},{"id":16,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi goes to the library after school. He reads books there. It is quiet.","japanese_translation":"サトシは放課後に図書館へ行きます。そこで本を読みます。静かです。","question":"Where does he go after school?","choice_a":"Park","choice_b":"Library","choice_c":"Store","choice_d":"Home","answer":"B","target_time_sec":40,"reading_point":"goes to the library","evidence_text":"goes to the library","reward_point":10},{"id":17,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi plays soccer every Sunday. He likes playing with his friends.","japanese_translation":"サトシは毎週日曜日にサッカーをします。友達とプレーするのが好きです。","question":"When does he play soccer?","choice_a":"Saturday","choice_b":"Sunday","choice_c":"Monday","choice_d":"Friday","answer":"B","target_time_sec":40,"reading_point":"every Sunday","evidence_text":"every Sunday","reward_point":10},{"id":18,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi eats dinner with his family. They talk about school.","japanese_translation":"サトシは家族と夕食を食べます。学校の話をします。","question":"Who does he eat with?","choice_a":"Friends","choice_b":"Teacher","choice_c":"Family","choice_d":"Alone","answer":"C","target_time_sec":40,"reading_point":"with his family","evidence_text":"with his family","reward_point":10},{"id":19,"type":"reading","eiken_grade":"4","sub_level":1,"passage":"Satoshi studies math and English every day. He wants to be a good student.","japanese_translation":"サトシは毎日数学と英語を勉強します。良い生徒になりたいと思っています。","question":"What does he study?","choice_a":"Math and English","choice_b":"Science","choice_c":"Music","choice_d":"Art","answer":"A","target_time_sec":40,"reading_point":"studies math and English","evidence_text":"studies math and English","reward_point":10},{"id":20,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi goes to a juku three times a week. He studies English there. His teacher is kind.","japanese_translation":"サトシは週に3回塾へ行きます。そこで英語を勉強します。先生は優しいです。","question":"How often does he go to juku?","choice_a":"Once a week","choice_b":"Twice a week","choice_c":"Three times a week","choice_d":"Every day","answer":"C","target_time_sec":45,"reading_point":"three times a week","evidence_text":"three times a week","reward_point":10},{"id":21,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi gets up at 7 every morning. He eats breakfast and goes to school.","japanese_translation":"サトシは毎朝7時に起きます。朝ごはんを食べて学校へ行きます。","question":"What time does he get up?","choice_a":"6","choice_b":"7","choice_c":"8","choice_d":"9","answer":"B","target_time_sec":45,"reading_point":"gets up at 7","evidence_text":"gets up at 7","reward_point":10},{"id":22,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi likes English because it is interesting. He studies it every day.","japanese_translation":"サトシは英語が面白いので好きです。毎日勉強しています。","question":"Why does he like English?","choice_a":"It is easy","choice_b":"It is interesting","choice_c":"It is hard","choice_d":"It is boring","answer":"B","target_time_sec":45,"reading_point":"because it is interesting","evidence_text":"because it is interesting","reward_point":10},{"id":23,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi plays soccer after school. He practices with his team.","japanese_translation":"サトシは放課後にサッカーをします。チームで練習します。","question":"Who does he practice with?","choice_a":"Friends","choice_b":"Team","choice_c":"Family","choice_d":"Teacher","answer":"B","target_time_sec":45,"reading_point":"with his team","evidence_text":"with his team","reward_point":10},{"id":24,"type":"reading","eiken_grade":"4","sub_level":2,"passage":"Satoshi reads English books. They are a little difficult but fun.","japanese_translation":"サトシは英語の本を読みます。少し難しいですが楽しいです。","question":"How are the books?","choice_a":"Easy","choice_b":"Difficult but fun","choice_c":"Boring","choice_d":"Long","answer":"B","target_time_sec":45,"reading_point":"difficult but fun","evidence_text":"difficult but fun","reward_point":10},{"id":25,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi was busy yesterday. He had a test at school and studied at home.","japanese_translation":"サトシは昨日忙しかったです。学校でテストがあり、家で勉強しました。","question":"Why was he busy?","choice_a":"He played games","choice_b":"He had a test","choice_c":"He was sick","choice_d":"He watched TV","answer":"B","target_time_sec":50,"reading_point":"had a test","evidence_text":"had a test","reward_point":10},{"id":26,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi went to the park with his friends. They played soccer and had fun.","japanese_translation":"サトシは友達と公園へ行きました。サッカーをして楽しみました。","question":"What did they do?","choice_a":"Studied","choice_b":"Played soccer","choice_c":"Watched TV","choice_d":"Slept","answer":"B","target_time_sec":50,"reading_point":"played soccer","evidence_text":"played soccer","reward_point":10},{"id":27,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi studied English last night because he has a test today.","japanese_translation":"サトシは今日テストがあるので昨夜英語を勉強しました。","question":"Why did he study?","choice_a":"He was bored","choice_b":"He has a test","choice_c":"He likes games","choice_d":"He is free","answer":"B","target_time_sec":50,"reading_point":"because he has a test","evidence_text":"because he has a test","reward_point":10},{"id":28,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi wants to visit America someday. He studies English for that.","japanese_translation":"サトシはいつかアメリカに行きたいと思っています。そのために英語を勉強しています。","question":"Why does he study English?","choice_a":"For fun","choice_b":"For travel","choice_c":"For games","choice_d":"For music","answer":"B","target_time_sec":50,"reading_point":"for that","evidence_text":"for that","reward_point":10},{"id":29,"type":"reading","eiken_grade":"4","sub_level":3,"passage":"Satoshi enjoys studying English with his friends. They help each other.","japanese_translation":"サトシは友達と英語を勉強するのを楽しんでいます。お互いに助け合っています。","question":"What do they do?","choice_a":"Fight","choice_b":"Help each other","choice_c":"Ignore","choice_d":"Play games","answer":"B","target_time_sec":50,"reading_point":"help each other","evidence_text":"help each other","reward_point":10},{"id":30,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi studies English every day because he wants to speak with people from other countries. He enjoys learning new words.","japanese_translation":"サトシは外国の人と話したいので毎日英語を勉強しています。新しい単語を覚えるのを楽しんでいます。","question":"Why does he study English?","choice_a":"For tests","choice_b":"To speak with people","choice_c":"For fun only","choice_d":"To play games","answer":"B","target_time_sec":55,"reading_point":"wants to speak with people に注目","evidence_text":"wants to speak with people","reward_point":10},{"id":31,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi went to the library yesterday. He borrowed two English books and started reading them at home.","japanese_translation":"サトシは昨日図書館へ行きました。英語の本を2冊借りて家で読み始めました。","question":"What did he do at the library?","choice_a":"Studied math","choice_b":"Borrowed books","choice_c":"Met friends","choice_d":"Played games","answer":"B","target_time_sec":55,"reading_point":"borrowed two English books","evidence_text":"borrowed two English books","reward_point":10},{"id":32,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi likes watching English movies. He listens carefully to understand the story.","japanese_translation":"サトシは英語の映画を見るのが好きです。話を理解するために注意深く聞きます。","question":"Why does he listen carefully?","choice_a":"To sleep","choice_b":"To understand","choice_c":"To relax","choice_d":"To read","answer":"B","target_time_sec":55,"reading_point":"to understand the story","evidence_text":"to understand the story","reward_point":10},{"id":33,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi gets up early on weekends. He studies for an hour before breakfast.","japanese_translation":"サトシは週末は早く起きます。朝ごはんの前に1時間勉強します。","question":"When does he study?","choice_a":"After breakfast","choice_b":"Before breakfast","choice_c":"At night","choice_d":"At school","answer":"B","target_time_sec":55,"reading_point":"before breakfast","evidence_text":"before breakfast","reward_point":10},{"id":34,"type":"reading","eiken_grade":"3","sub_level":1,"passage":"Satoshi has many friends at school. He often studies with them after class.","japanese_translation":"サトシは学校にたくさんの友達がいます。授業のあとによく一緒に勉強します。","question":"What does he do after class?","choice_a":"Plays games","choice_b":"Studies with friends","choice_c":"Goes home","choice_d":"Eats dinner","answer":"B","target_time_sec":55,"reading_point":"studies with them after class","evidence_text":"studies with them after class","reward_point":10},{"id":35,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi was very busy last week because he had many tests. He studied hard every night to prepare for them.","japanese_translation":"サトシは先週テストが多くてとても忙しかったです。それらのために毎晩一生懸命勉強しました。","question":"Why was he busy?","choice_a":"He had many tests","choice_b":"He played sports","choice_c":"He was sick","choice_d":"He traveled","answer":"A","target_time_sec":60,"reading_point":"because he had many tests","evidence_text":"because he had many tests","reward_point":10},{"id":36,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi joined the English club at school. He practices speaking with other students every day.","japanese_translation":"サトシは学校の英語クラブに入りました。他の生徒と毎日話す練習をしています。","question":"What does he practice?","choice_a":"Writing","choice_b":"Speaking","choice_c":"Reading","choice_d":"Listening","answer":"B","target_time_sec":60,"reading_point":"practices speaking","evidence_text":"practices speaking","reward_point":10},{"id":37,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi wants to study abroad in the future. He believes English will help him achieve his dream.","japanese_translation":"サトシは将来留学したいと思っています。英語が夢の達成に役立つと信じています。","question":"Why does he study English?","choice_a":"For fun","choice_b":"For travel only","choice_c":"To achieve his dream","choice_d":"To sleep","answer":"C","target_time_sec":60,"reading_point":"help him achieve his dream","evidence_text":"help him achieve his dream","reward_point":10},{"id":38,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi watched an English program on TV. Although it was difficult, he understood some parts.","japanese_translation":"サトシはテレビで英語の番組を見ました。難しかったですが一部は理解できました。","question":"How was the program?","choice_a":"Easy","choice_b":"Boring","choice_c":"Difficult","choice_d":"Short","answer":"C","target_time_sec":60,"reading_point":"it was difficult","evidence_text":"it was difficult","reward_point":10},{"id":39,"type":"reading","eiken_grade":"3","sub_level":2,"passage":"Satoshi studies English with his teacher after school. His teacher gives him useful advice.","japanese_translation":"サトシは放課後に先生と英語を勉強します。先生は役立つアドバイスをくれます。","question":"What does his teacher give him?","choice_a":"Homework","choice_b":"Advice","choice_c":"Food","choice_d":"Books","answer":"B","target_time_sec":60,"reading_point":"gives him useful advice","evidence_text":"gives him useful advice","reward_point":10},{"id":40,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi failed an English test last month, but he did not give up. He studied harder and improved his score in the next test.","japanese_translation":"サトシは先月英語のテストに失敗しましたが、あきらめませんでした。もっと勉強して次のテストで成績を上げました。","question":"What did he do after failing?","choice_a":"Gave up","choice_b":"Studied harder","choice_c":"Played games","choice_d":"Slept","answer":"B","target_time_sec":65,"reading_point":"studied harder","evidence_text":"studied harder","reward_point":10},{"id":41,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi reads English articles online. At first, he could not understand them well, but now he can read them more easily.","japanese_translation":"サトシはオンラインで英語の記事を読みます。最初はよく分かりませんでしたが、今はもっと簡単に読めます。","question":"How is he now?","choice_a":"Cannot read","choice_b":"Reads easily","choice_c":"Does not try","choice_d":"Hates English","answer":"B","target_time_sec":65,"reading_point":"now he can read them more easily","evidence_text":"now he can read them more easily","reward_point":10},{"id":42,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi thinks studying English is important because it helps him communicate with people around the world.","japanese_translation":"サトシは英語の勉強は大切だと思っています。世界中の人とコミュニケーションできるからです。","question":"Why is English important?","choice_a":"For games","choice_b":"For communication","choice_c":"For sleep","choice_d":"For school only","answer":"B","target_time_sec":65,"reading_point":"helps him communicate","evidence_text":"helps him communicate","reward_point":10},{"id":43,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi tried to watch an English movie without subtitles. It was difficult, but he enjoyed the challenge.","japanese_translation":"サトシは字幕なしで英語の映画を見ようとしました。難しかったですが挑戦を楽しみました。","question":"How did he feel?","choice_a":"Bored","choice_b":"Angry","choice_c":"Enjoyed it","choice_d":"Sad","answer":"C","target_time_sec":65,"reading_point":"enjoyed the challenge","evidence_text":"enjoyed the challenge","reward_point":10},{"id":44,"type":"reading","eiken_grade":"3","sub_level":3,"passage":"Satoshi studies English every day even when he is tired. He believes that practice is the key to success.","japanese_translation":"サトシは疲れていても毎日英語を勉強します。練習が成功の鍵だと信じています。","question":"What does he believe?","choice_a":"Practice is important","choice_b":"English is easy","choice_c":"Study is boring","choice_d":"Sleep is best","answer":"A","target_time_sec":65,"reading_point":"practice is the key","evidence_text":"practice is the key","reward_point":10},{"id":45,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi has been interested in English since he was in elementary school. He enjoys learning new expressions and using them in conversations.","japanese_translation":"サトシは小学生の頃から英語に興味を持っています。新しい表現を学び、それを会話で使うことを楽しんでいます。","question":"What does he enjoy?","choice_a":"Watching TV","choice_b":"Learning and using English","choice_c":"Playing games","choice_d":"Reading only","answer":"B","target_time_sec":70,"reading_point":"enjoys learning new expressions","evidence_text":"enjoys learning new expressions","reward_point":10},{"id":46,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi practices speaking English every day so that he can communicate better with others. He often talks with his friends in English.","japanese_translation":"サトシは他の人とよりよくコミュニケーションを取れるように毎日英語を話す練習をしています。よく友達と英語で話します。","question":"Why does he practice?","choice_a":"For tests","choice_b":"To communicate better","choice_c":"For fun only","choice_d":"To read books","answer":"B","target_time_sec":70,"reading_point":"so that he can communicate better","evidence_text":"so that he can communicate better","reward_point":10},{"id":47,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi joined an English club at school. He was nervous at first, but he became more confident over time.","japanese_translation":"サトシは学校の英語クラブに入りました。最初は緊張していましたが、次第に自信がついてきました。","question":"How did he feel at first?","choice_a":"Happy","choice_b":"Nervous","choice_c":"Excited","choice_d":"Angry","answer":"B","target_time_sec":70,"reading_point":"was nervous at first","evidence_text":"was nervous at first","reward_point":10},{"id":48,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi watches English videos online. He tries to understand them without using subtitles.","japanese_translation":"サトシはオンラインで英語の動画を見ます。字幕を使わずに理解しようとしています。","question":"What does he try to do?","choice_a":"Read books","choice_b":"Understand videos without subtitles","choice_c":"Write essays","choice_d":"Speak Japanese","answer":"B","target_time_sec":70,"reading_point":"without using subtitles","evidence_text":"without using subtitles","reward_point":10},{"id":49,"type":"reading","eiken_grade":"pre2","sub_level":1,"passage":"Satoshi studies English every day because he wants to travel abroad in the future. He is especially interested in visiting the United States.","japanese_translation":"サトシは将来海外旅行をしたいので毎日英語を勉強しています。特にアメリカに興味があります。","question":"Why does he study English?","choice_a":"For school","choice_b":"To travel abroad","choice_c":"To watch TV","choice_d":"To play sports","answer":"B","target_time_sec":70,"reading_point":"wants to travel abroad","evidence_text":"wants to travel abroad","reward_point":10},{"id":50,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi has improved his English skills by studying every day. Although he sometimes feels tired, he continues his efforts because he believes it will help him in the future.","japanese_translation":"サトシは毎日勉強することで英語力を伸ばしてきました。時々疲れることもありますが、将来役に立つと信じて努力を続けています。","question":"Why does he continue studying?","choice_a":"He is forced","choice_b":"He believes it will help him","choice_c":"He is bored","choice_d":"He likes tests","answer":"B","target_time_sec":75,"reading_point":"believes it will help him","evidence_text":"believes it will help him","reward_point":10},{"id":51,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi decided to study English more seriously after he talked with a foreign student. He realized that communication is important.","japanese_translation":"サトシは外国人の生徒と話した後、もっと真剣に英語を勉強しようと決めました。コミュニケーションが大切だと気づきました。","question":"What made him decide?","choice_a":"A test","choice_b":"A teacher","choice_c":"Talking with a foreign student","choice_d":"Watching TV","answer":"C","target_time_sec":75,"reading_point":"talked with a foreign student","evidence_text":"talked with a foreign student","reward_point":10},{"id":52,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi reads English books to improve his vocabulary. He writes down new words and reviews them regularly.","japanese_translation":"サトシは語彙を増やすために英語の本を読みます。新しい単語を書き留め、定期的に復習します。","question":"What does he do with new words?","choice_a":"Ignores them","choice_b":"Writes them down","choice_c":"Forgets them","choice_d":"Hides them","answer":"B","target_time_sec":75,"reading_point":"writes down new words","evidence_text":"writes down new words","reward_point":10},{"id":53,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi sometimes watches English movies with subtitles. This helps him understand the story better and learn new expressions.","japanese_translation":"サトシは時々字幕付きで英語の映画を見ます。これにより話の理解が深まり、新しい表現を学べます。","question":"Why does he watch with subtitles?","choice_a":"To sleep","choice_b":"To understand better","choice_c":"To relax","choice_d":"To finish quickly","answer":"B","target_time_sec":75,"reading_point":"helps him understand the story","evidence_text":"helps him understand the story","reward_point":10},{"id":54,"type":"reading","eiken_grade":"pre2","sub_level":2,"passage":"Satoshi practices English with his friends. They correct each other's mistakes and learn together.","japanese_translation":"サトシは友達と英語の練習をします。お互いの間違いを直し合いながら学びます。","question":"What do they do?","choice_a":"Compete only","choice_b":"Correct mistakes","choice_c":"Play games","choice_d":"Ignore errors","answer":"B","target_time_sec":75,"reading_point":"correct each other's mistakes","evidence_text":"correct each other","reward_point":10},{"id":55,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi used to dislike English, but his opinion changed after he met a teacher who made learning fun. Now he studies every day with interest.","japanese_translation":"サトシは以前英語が嫌いでしたが、楽しく教えてくれる先生に出会って考えが変わりました。今では興味を持って毎日勉強しています。","question":"Why did his opinion change?","choice_a":"He failed a test","choice_b":"He met a good teacher","choice_c":"He traveled abroad","choice_d":"He read a book","answer":"B","target_time_sec":80,"reading_point":"met a teacher who made learning fun","evidence_text":"met a teacher who made learning fun","reward_point":10},{"id":56,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi has been studying English for many years. As a result, he can now understand movies without subtitles.","japanese_translation":"サトシは何年も英語を勉強してきました。その結果、今では字幕なしで映画を理解できます。","question":"What can he do now?","choice_a":"Write books","choice_b":"Understand movies","choice_c":"Teach others","choice_d":"Travel alone","answer":"B","target_time_sec":80,"reading_point":"understand movies without subtitles","evidence_text":"understand movies without subtitles","reward_point":10},{"id":57,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi thinks that making mistakes is important for learning. He is not afraid of speaking English anymore.","japanese_translation":"サトシは間違えることは学習に大切だと考えています。もう英語を話すことを怖がっていません。","question":"What does he think?","choice_a":"Mistakes are bad","choice_b":"Mistakes are important","choice_c":"English is easy","choice_d":"Speaking is useless","answer":"B","target_time_sec":80,"reading_point":"making mistakes is important","evidence_text":"making mistakes is important","reward_point":10},{"id":58,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi tries to use English in his daily life. For example, he writes a diary in English and listens to English music.","japanese_translation":"サトシは日常生活で英語を使うようにしています。例えば英語で日記を書いたり音楽を聞いたりしています。","question":"What does he do daily?","choice_a":"Plays games","choice_b":"Uses English","choice_c":"Watches TV","choice_d":"Sleeps early","answer":"B","target_time_sec":80,"reading_point":"use English in his daily life","evidence_text":"use English in his daily life","reward_point":10},{"id":59,"type":"reading","eiken_grade":"pre2","sub_level":3,"passage":"Satoshi believes that learning English will open many doors in the future. Therefore, he studies hard every day.","japanese_translation":"サトシは英語を学ぶことで将来多くの可能性が広がると信じています。そのため毎日一生懸命勉強しています。","question":"Why does he study hard?","choice_a":"He is forced","choice_b":"He believes it opens doors","choice_c":"He likes homework","choice_d":"He is bored","answer":"B","target_time_sec":80,"reading_point":"will open many doors","evidence_text":"will open many doors","reward_point":10},{"id":60,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi has recently become interested in studying abroad. He started collecting information about schools in English-speaking countries.","japanese_translation":"サトシは最近留学に興味を持つようになりました。英語圏の学校について情報を集め始めました。","question":"What did he start doing?","choice_a":"Watching movies","choice_b":"Collecting information","choice_c":"Playing games","choice_d":"Reading novels","answer":"B","target_time_sec":85,"reading_point":"started collecting information","evidence_text":"started collecting information","reward_point":10},{"id":61,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi is improving his English skills by using online learning tools. He practices listening and speaking every day.","japanese_translation":"サトシはオンライン学習ツールを使って英語力を伸ばしています。毎日リスニングとスピーキングを練習しています。","question":"How is he improving his skills?","choice_a":"By reading books","choice_b":"By using online tools","choice_c":"By sleeping","choice_d":"By traveling","answer":"B","target_time_sec":85,"reading_point":"using online learning tools","evidence_text":"using online learning tools","reward_point":10},{"id":62,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi attended an English workshop last weekend. He met many students who share the same interest.","japanese_translation":"サトシは先週末英語のワークショップに参加しました。同じ興味を持つ多くの生徒に出会いました。","question":"What did he do last weekend?","choice_a":"Studied alone","choice_b":"Attended a workshop","choice_c":"Watched TV","choice_d":"Played sports","answer":"B","target_time_sec":85,"reading_point":"attended an English workshop","evidence_text":"attended an English workshop","reward_point":10},{"id":63,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi often listens to English podcasts while commuting. This helps him get used to natural speed.","japanese_translation":"サトシは通学中によく英語のポッドキャストを聞きます。自然なスピードに慣れるのに役立っています。","question":"Why does he listen to podcasts?","choice_a":"To relax","choice_b":"To get used to speed","choice_c":"To sleep","choice_d":"To study math","answer":"B","target_time_sec":85,"reading_point":"get used to natural speed","evidence_text":"get used to natural speed","reward_point":10},{"id":64,"type":"reading","eiken_grade":"pre2+","sub_level":1,"passage":"Satoshi is trying to write essays in English. Although it is difficult, he believes it will improve his writing skills.","japanese_translation":"サトシは英語でエッセイを書こうとしています。難しいですが、書く力が伸びると信じています。","question":"What is he trying to do?","choice_a":"Read essays","choice_b":"Write essays","choice_c":"Translate books","choice_d":"Speak only","answer":"B","target_time_sec":85,"reading_point":"trying to write essays","evidence_text":"trying to write essays","reward_point":10},{"id":65,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi believes that learning English requires continuous effort. Even when he feels tired, he studies a little every day.","japanese_translation":"サトシは英語の学習には継続的な努力が必要だと考えています。疲れている時でも毎日少しは勉強します。","question":"What does he believe?","choice_a":"Effort is unnecessary","choice_b":"Continuous effort is needed","choice_c":"English is easy","choice_d":"Study is boring","answer":"B","target_time_sec":90,"reading_point":"requires continuous effort","evidence_text":"requires continuous effort","reward_point":10},{"id":66,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi joined an online community where people practice English together. He enjoys exchanging ideas with members.","japanese_translation":"サトシは英語を練習するオンラインコミュニティに参加しました。メンバーと意見交換を楽しんでいます。","question":"What does he enjoy?","choice_a":"Watching videos","choice_b":"Exchanging ideas","choice_c":"Playing games","choice_d":"Reading alone","answer":"B","target_time_sec":90,"reading_point":"enjoys exchanging ideas","evidence_text":"enjoys exchanging ideas","reward_point":10},{"id":67,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi started keeping a journal in English. At first, he found it difficult, but now he can write more easily.","japanese_translation":"サトシは英語で日記を書き始めました。最初は難しかったですが、今ではより簡単に書けます。","question":"How is he now?","choice_a":"Cannot write","choice_b":"Writes easily","choice_c":"Hates writing","choice_d":"Ignores it","answer":"B","target_time_sec":90,"reading_point":"now he can write more easily","evidence_text":"now he can write more easily","reward_point":10},{"id":68,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi sometimes makes mistakes when speaking English. However, he uses them as opportunities to learn.","japanese_translation":"サトシは英語を話すときに時々間違えます。しかし、それを学ぶ機会として活用しています。","question":"How does he see mistakes?","choice_a":"As failures","choice_b":"As opportunities","choice_c":"As problems","choice_d":"As jokes","answer":"B","target_time_sec":90,"reading_point":"uses them as opportunities","evidence_text":"uses them as opportunities","reward_point":10},{"id":69,"type":"reading","eiken_grade":"pre2+","sub_level":2,"passage":"Satoshi watches English news programs to understand global issues. He wants to become more aware of the world.","japanese_translation":"サトシは世界の問題を理解するために英語のニュースを見ます。もっと世界に詳しくなりたいと思っています。","question":"Why does he watch news?","choice_a":"For fun","choice_b":"To understand global issues","choice_c":"To sleep","choice_d":"To relax","answer":"B","target_time_sec":90,"reading_point":"understand global issues","evidence_text":"understand global issues","reward_point":10},{"id":70,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi has realized that learning English is not only about memorizing words but also about understanding how to use them in real situations.","japanese_translation":"サトシは英語の学習は単語を覚えるだけでなく、実際の場面での使い方を理解することが大切だと気づきました。","question":"What has he realized?","choice_a":"Words are enough","choice_b":"Usage is important","choice_c":"Grammar is useless","choice_d":"Tests are easy","answer":"B","target_time_sec":95,"reading_point":"understanding how to use them","evidence_text":"understanding how to use them","reward_point":10},{"id":71,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi feels more confident speaking English than before. This is because he has practiced regularly for a long time.","japanese_translation":"サトシは以前より英語を話すことに自信がついています。それは長い間継続して練習してきたからです。","question":"Why is he confident?","choice_a":"He is talented","choice_b":"He practiced regularly","choice_c":"He traveled abroad","choice_d":"He watched TV","answer":"B","target_time_sec":95,"reading_point":"practiced regularly","evidence_text":"practiced regularly","reward_point":10},{"id":72,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi understands that making mistakes is a natural part of learning. Therefore, he is not afraid to try new expressions.","japanese_translation":"サトシは間違いは学習の自然な一部だと理解しています。そのため新しい表現を試すことを恐れていません。","question":"What is he not afraid of?","choice_a":"Failing tests","choice_b":"Trying new expressions","choice_c":"Speaking Japanese","choice_d":"Studying alone","answer":"B","target_time_sec":95,"reading_point":"not afraid to try new expressions","evidence_text":"not afraid to try new expressions","reward_point":10},{"id":73,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi has been using English in his daily life, such as writing messages and reading articles. This has improved his skills significantly.","japanese_translation":"サトシは日常生活で英語を使っています。例えばメッセージを書いたり記事を読んだりしています。その結果、英語力が大きく向上しました。","question":"What improved his skills?","choice_a":"Watching TV","choice_b":"Using English daily","choice_c":"Playing games","choice_d":"Sleeping","answer":"B","target_time_sec":95,"reading_point":"using English in his daily life","evidence_text":"using English in his daily life","reward_point":10},{"id":74,"type":"reading","eiken_grade":"pre2+","sub_level":3,"passage":"Satoshi believes that mastering English will give him more opportunities in the future. He continues studying with strong motivation.","japanese_translation":"サトシは英語を習得することで将来多くの機会が得られると信じています。強い意欲を持って勉強を続けています。","question":"Why does he keep studying?","choice_a":"He is forced","choice_b":"He believes it gives opportunities","choice_c":"He is bored","choice_d":"He has free time","answer":"B","target_time_sec":95,"reading_point":"give him more opportunities","evidence_text":"give him more opportunities","reward_point":10},{"id":75,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi has been studying English to prepare for his future career. He believes that being able to communicate in English will give him more opportunities.","japanese_translation":"サトシは将来の仕事に備えて英語を勉強しています。英語でコミュニケーションできることがより多くの機会を与えると信じています。","question":"Why does he study English?","choice_a":"For fun","choice_b":"For his future career","choice_c":"To relax","choice_d":"To travel only","answer":"B","target_time_sec":100,"reading_point":"prepare for his future career","evidence_text":"prepare for his future career","reward_point":10},{"id":76,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi often reads English articles about technology. He is interested in how new inventions change our lives.","japanese_translation":"サトシはよく技術に関する英語の記事を読みます。新しい発明がどのように生活を変えるかに興味があります。","question":"What is he interested in?","choice_a":"Sports","choice_b":"Technology","choice_c":"Music","choice_d":"History","answer":"B","target_time_sec":100,"reading_point":"reads English articles about technology","evidence_text":"reads English articles about technology","reward_point":10},{"id":77,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi joined an international exchange program. He had a chance to talk with students from different countries.","japanese_translation":"サトシは国際交流プログラムに参加しました。さまざまな国の生徒と話す機会がありました。","question":"What did he do?","choice_a":"Studied alone","choice_b":"Joined a program","choice_c":"Watched TV","choice_d":"Stayed home","answer":"B","target_time_sec":100,"reading_point":"joined an international exchange program","evidence_text":"joined an international exchange program","reward_point":10},{"id":78,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi studies English every day, even when he is busy. He thinks consistency is the key to success.","japanese_translation":"サトシは忙しくても毎日英語を勉強します。継続が成功の鍵だと考えています。","question":"What does he think?","choice_a":"Luck is important","choice_b":"Consistency is the key","choice_c":"Talent is enough","choice_d":"Study is boring","answer":"B","target_time_sec":100,"reading_point":"consistency is the key","evidence_text":"consistency is the key","reward_point":10},{"id":79,"type":"reading","eiken_grade":"2","sub_level":1,"passage":"Satoshi listens to English news to improve his listening skills. He also learns about world events at the same time.","japanese_translation":"サトシはリスニング力を高めるために英語のニュースを聞きます。同時に世界の出来事も学びます。","question":"Why does he listen to news?","choice_a":"To relax","choice_b":"To improve listening","choice_c":"To sleep","choice_d":"To read books","answer":"B","target_time_sec":100,"reading_point":"improve his listening skills","evidence_text":"improve his listening skills","reward_point":10},{"id":80,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi believes that learning English is essential in today's global society. Without it, he thinks it would be difficult to communicate internationally.","japanese_translation":"サトシは現代のグローバル社会では英語の学習が不可欠だと考えています。それがなければ国際的にコミュニケーションを取るのは難しいと思っています。","question":"What does he believe?","choice_a":"English is unnecessary","choice_b":"English is essential","choice_c":"English is easy","choice_d":"English is boring","answer":"B","target_time_sec":110,"reading_point":"learning English is essential","evidence_text":"learning English is essential","reward_point":10},{"id":81,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi has improved his English by practicing regularly. As a result, he can now express his ideas more clearly.","japanese_translation":"サトシは継続的に練習することで英語力を向上させました。その結果、よりはっきりと自分の考えを表現できるようになりました。","question":"What is the result?","choice_a":"He forgot English","choice_b":"He expresses ideas clearly","choice_c":"He stopped studying","choice_d":"He reads less","answer":"B","target_time_sec":110,"reading_point":"express his ideas more clearly","evidence_text":"express his ideas more clearly","reward_point":10},{"id":82,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi sometimes feels discouraged when he cannot understand difficult texts. However, he keeps trying because he knows improvement takes time.","japanese_translation":"サトシは難しい文章が理解できないと落ち込むことがあります。しかし、上達には時間がかかると分かっているので努力を続けます。","question":"Why does he keep trying?","choice_a":"He is forced","choice_b":"Improvement takes time","choice_c":"He likes failure","choice_d":"He is bored","answer":"B","target_time_sec":110,"reading_point":"improvement takes time","evidence_text":"improvement takes time","reward_point":10},{"id":83,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi reads various types of English materials, such as articles and books, to broaden his knowledge.","japanese_translation":"サトシは知識を広げるために記事や本などさまざまな英語の教材を読みます。","question":"Why does he read various materials?","choice_a":"To sleep","choice_b":"To broaden knowledge","choice_c":"To relax","choice_d":"To pass time","answer":"B","target_time_sec":110,"reading_point":"broaden his knowledge","evidence_text":"broaden his knowledge","reward_point":10},{"id":84,"type":"reading","eiken_grade":"2","sub_level":2,"passage":"Satoshi participates in discussions in English class. This helps him improve both his speaking and thinking skills.","japanese_translation":"サトシは英語の授業でディスカッションに参加します。これにより話す力と思考力の両方が向上します。","question":"What does it help him improve?","choice_a":"Writing only","choice_b":"Speaking and thinking","choice_c":"Listening only","choice_d":"Reading only","answer":"B","target_time_sec":110,"reading_point":"improve both his speaking and thinking","evidence_text":"improve both his speaking and thinking","reward_point":10},{"id":85,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi believes that making mistakes is an important part of learning. By analyzing his errors, he can improve his understanding.","japanese_translation":"サトシは間違いは学習の重要な一部だと考えています。ミスを分析することで理解を深めることができます。","question":"What does he do with mistakes?","choice_a":"Ignores them","choice_b":"Analyzes them","choice_c":"Hides them","choice_d":"Avoids them","answer":"B","target_time_sec":120,"reading_point":"analyzing his errors","evidence_text":"analyzing his errors","reward_point":10},{"id":86,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi has developed his English skills through constant practice. As a result, he can now communicate confidently with others.","japanese_translation":"サトシは継続的な練習によって英語力を伸ばしました。その結果、自信を持って他人とコミュニケーションできるようになりました。","question":"What can he do now?","choice_a":"Write books","choice_b":"Communicate confidently","choice_c":"Teach classes","choice_d":"Travel alone","answer":"B","target_time_sec":120,"reading_point":"communicate confidently","evidence_text":"communicate confidently","reward_point":10},{"id":87,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi thinks that exposure to real English is important. Therefore, he listens to native speakers as much as possible.","japanese_translation":"サトシは実際の英語に触れることが重要だと考えています。そのためできるだけネイティブの英語を聞きます。","question":"What does he try to do?","choice_a":"Avoid English","choice_b":"Listen to native speakers","choice_c":"Read only","choice_d":"Study grammar only","answer":"B","target_time_sec":120,"reading_point":"listens to native speakers","evidence_text":"listens to native speakers","reward_point":10},{"id":88,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi understands that language learning requires patience. Even when progress is slow, he continues his efforts.","japanese_translation":"サトシは言語学習には忍耐が必要だと理解しています。進歩が遅くても努力を続けます。","question":"What is required for learning?","choice_a":"Speed","choice_b":"Patience","choice_c":"Talent","choice_d":"Luck","answer":"B","target_time_sec":120,"reading_point":"requires patience","evidence_text":"requires patience","reward_point":10},{"id":89,"type":"reading","eiken_grade":"2","sub_level":3,"passage":"Satoshi aims to use English in his future job. He studies hard to achieve his goal and gain useful skills.","japanese_translation":"サトシは将来の仕事で英語を使うことを目指しています。目標を達成し役立つスキルを身につけるために一生懸命勉強しています。","question":"Why does he study hard?","choice_a":"For fun","choice_b":"To achieve his goal","choice_c":"To sleep","choice_d":"To relax","answer":"B","target_time_sec":120,"reading_point":"achieve his goal","evidence_text":"achieve his goal","reward_point":10},{"id":90,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi has been considering studying abroad to broaden his perspective. He believes that experiencing different cultures will help him grow as a person.","japanese_translation":"サトシは視野を広げるために留学を考えています。異文化を経験することが人としての成長につながると信じています。","question":"Why does he want to study abroad?","choice_a":"To relax","choice_b":"To broaden his perspective","choice_c":"To play sports","choice_d":"To meet friends","answer":"B","target_time_sec":130,"reading_point":"broaden his perspective","evidence_text":"broaden his perspective","reward_point":10},{"id":91,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi reads English newspapers to stay informed about global issues. He wants to understand different viewpoints.","japanese_translation":"サトシは世界の問題について知るために英字新聞を読みます。さまざまな視点を理解したいと考えています。","question":"Why does he read newspapers?","choice_a":"To relax","choice_b":"To understand viewpoints","choice_c":"To play games","choice_d":"To sleep","answer":"B","target_time_sec":130,"reading_point":"understand different viewpoints","evidence_text":"understand different viewpoints","reward_point":10},{"id":92,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi believes that effective communication requires not only language skills but also cultural understanding.","japanese_translation":"サトシは効果的なコミュニケーションには語学力だけでなく文化理解も必要だと考えています。","question":"What does communication require?","choice_a":"Only grammar","choice_b":"Only vocabulary","choice_c":"Language and culture","choice_d":"Only speaking","answer":"C","target_time_sec":130,"reading_point":"language skills but also cultural understanding","evidence_text":"language skills but also cultural understanding","reward_point":10},{"id":93,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi has been improving his English by engaging in discussions on various topics. This has enhanced his critical thinking skills.","japanese_translation":"サトシはさまざまな話題について議論することで英語力を高めています。これにより批判的思考力も向上しました。","question":"What has improved besides English?","choice_a":"Memory","choice_b":"Critical thinking","choice_c":"Writing speed","choice_d":"Reading only","answer":"B","target_time_sec":130,"reading_point":"enhanced his critical thinking skills","evidence_text":"enhanced his critical thinking skills","reward_point":10},{"id":94,"type":"reading","eiken_grade":"pre1","sub_level":1,"passage":"Satoshi tries to read complex English texts, even if he does not understand everything. He believes that exposure is important.","japanese_translation":"サトシはすべて理解できなくても難しい英語の文章を読むようにしています。触れることが重要だと考えています。","question":"What does he believe?","choice_a":"Perfection is needed","choice_b":"Exposure is important","choice_c":"English is easy","choice_d":"Study is boring","answer":"B","target_time_sec":130,"reading_point":"exposure is important","evidence_text":"exposure is important","reward_point":10},{"id":95,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi has realized that learning a language involves more than memorizing vocabulary. It requires understanding context and nuance.","japanese_translation":"サトシは言語学習は単語暗記以上のものであり、文脈やニュアンスの理解が必要だと気づきました。","question":"What is required?","choice_a":"Memorization only","choice_b":"Context and nuance","choice_c":"Grammar only","choice_d":"Speaking only","answer":"B","target_time_sec":140,"reading_point":"understanding context and nuance","evidence_text":"understanding context and nuance","reward_point":10},{"id":96,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi participates in debates to improve his ability to express opinions clearly. This has helped him become more confident.","japanese_translation":"サトシは意見を明確に表現する力を高めるためにディベートに参加しています。これにより自信がつきました。","question":"Why does he join debates?","choice_a":"To relax","choice_b":"To express opinions","choice_c":"To listen only","choice_d":"To read","answer":"B","target_time_sec":140,"reading_point":"express opinions clearly","evidence_text":"express opinions clearly","reward_point":10},{"id":97,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi often analyzes his mistakes to identify patterns. This allows him to avoid making the same errors again.","japanese_translation":"サトシはミスのパターンを見つけるために分析します。これにより同じ間違いを防げます。","question":"Why does he analyze mistakes?","choice_a":"To forget them","choice_b":"To identify patterns","choice_c":"To relax","choice_d":"To stop studying","answer":"B","target_time_sec":140,"reading_point":"identify patterns","evidence_text":"identify patterns","reward_point":10},{"id":98,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi believes that motivation plays a key role in language learning. Without it, progress would be difficult.","japanese_translation":"サトシは語学学習においてモチベーションが重要な役割を果たすと考えています。それがなければ上達は難しいです。","question":"What is important?","choice_a":"Talent","choice_b":"Motivation","choice_c":"Luck","choice_d":"Time only","answer":"B","target_time_sec":140,"reading_point":"motivation plays a key role","evidence_text":"motivation plays a key role","reward_point":10},{"id":99,"type":"reading","eiken_grade":"pre1","sub_level":2,"passage":"Satoshi reads academic articles to improve his comprehension skills. Although they are challenging, he finds them rewarding.","japanese_translation":"サトシは読解力を高めるために学術的な記事を読みます。難しいですがやりがいを感じています。","question":"How does he feel?","choice_a":"Bored","choice_b":"Rewarded","choice_c":"Angry","choice_d":"Confused","answer":"B","target_time_sec":140,"reading_point":"finds them rewarding","evidence_text":"finds them rewarding","reward_point":10},{"id":100,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi believes that language is a tool for connecting people across cultures. Therefore, he aims to use English to contribute to society in the future.","japanese_translation":"サトシは言語は文化を超えて人々をつなぐ道具だと考えています。そのため将来は英語を使って社会に貢献したいと考えています。","question":"What is his goal?","choice_a":"To relax","choice_b":"To contribute to society","choice_c":"To play sports","choice_d":"To study alone","answer":"B","target_time_sec":150,"reading_point":"contribute to society","evidence_text":"contribute to society","reward_point":10},{"id":101,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi has developed a habit of reflecting on his learning process. This helps him understand his strengths and weaknesses.","japanese_translation":"サトシは学習を振り返る習慣を身につけました。これにより自分の強みと弱みを理解できます。","question":"What does reflection help him do?","choice_a":"Sleep better","choice_b":"Understand strengths","choice_c":"Forget mistakes","choice_d":"Avoid study","answer":"B","target_time_sec":150,"reading_point":"understand his strengths and weaknesses","evidence_text":"understand his strengths and weaknesses","reward_point":10},{"id":102,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi understands that mastering a language takes time and dedication. He remains patient and continues his efforts.","japanese_translation":"サトシは言語習得には時間と努力が必要だと理解しています。忍耐強く努力を続けています。","question":"What is needed?","choice_a":"Speed","choice_b":"Time and dedication","choice_c":"Luck","choice_d":"Talent only","answer":"B","target_time_sec":150,"reading_point":"takes time and dedication","evidence_text":"takes time and dedication","reward_point":10},{"id":103,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi values communication over perfection. He believes that conveying ideas clearly is more important than making no mistakes.","japanese_translation":"サトシは完璧さよりもコミュニケーションを重視しています。間違えないことよりも考えを伝えることが大切だと考えています。","question":"What does he value?","choice_a":"Perfection","choice_b":"Communication","choice_c":"Grammar","choice_d":"Silence","answer":"B","target_time_sec":150,"reading_point":"communication over perfection","evidence_text":"communication over perfection","reward_point":10},{"id":104,"type":"reading","eiken_grade":"pre1","sub_level":3,"passage":"Satoshi aims to become a global professional. He studies English and other skills to prepare for future challenges.","japanese_translation":"サトシは国際的に活躍する人材になることを目指しています。将来の課題に備えて英語や他のスキルを学んでいます。","question":"What is his aim?","choice_a":"To relax","choice_b":"To become global","choice_c":"To travel only","choice_d":"To study less","answer":"B","target_time_sec":150,"reading_point":"become a global professional","evidence_text":"become a global professional","reward_point":10}];
 
 /* ========================================================
-   POINT CONFIG
+   CONFIG
 ======================================================== */
 const POINT_CONFIG = {
   correct:    10,
@@ -438,9 +447,6 @@ const POINT_CONFIG = {
   combo5:      5,
 };
 
-/* ========================================================
-   GRADE DISPLAY MAP
-======================================================== */
 const GRADE_LABEL = {
   '5':    '5級',
   '4':    '4級',
@@ -454,21 +460,71 @@ const GRADE_LABEL = {
 const GRADE_ORDER = ['5','4','3','pre2','pre2p','2','pre1','1'];
 
 /* ========================================================
+   PRE-PROCESS
+======================================================== */
+// グレードキーを正規化（pre2+ → pre2p）
+PASSAGES.forEach(p => {
+  if (p.eiken_grade === 'pre2+') p.eiken_grade = 'pre2p';
+});
+
+// 級ごとにグルーピング（sub_level順でソート）
+const GRADE_PASSAGES = {};
+GRADE_ORDER.forEach(g => {
+  GRADE_PASSAGES[g] = PASSAGES
+    .filter(p => p.eiken_grade === g)
+    .sort((a, b) => (a.sub_level || 0) - (b.sub_level || 0));
+});
+
+/* ========================================================
+   PROGRESS (localStorage)
+======================================================== */
+const PROGRESS_KEY = 'sokutore_v1';
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{"cleared":{}}'); }
+  catch(e) { return { cleared: {} }; }
+}
+function saveProgress(p) {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+}
+function stageKey(grade, idx) { return grade + '_' + idx; }
+function isStageCleared(grade, idx) {
+  return !!loadProgress().cleared[stageKey(grade, idx)];
+}
+function isStageSpeedCleared(grade, idx) {
+  return loadProgress().cleared[stageKey(grade, idx)] === 'speed';
+}
+function markStageCleared(grade, idx, isSpeed) {
+  const p = loadProgress();
+  const k = stageKey(grade, idx);
+  if (p.cleared[k] !== 'speed') {  // スピードクリアを通常クリアに格下げしない
+    p.cleared[k] = isSpeed ? 'speed' : true;
+  }
+  saveProgress(p);
+}
+function isGradeUnlocked(grade) {
+  return true; // 全級いつでも開放
+}
+function isGradeComplete(grade) {
+  const pp = GRADE_PASSAGES[grade];
+  if (!pp || !pp.length) return false;
+  return pp.every((p, i) => isStageCleared(grade, i));
+}
+function gradeClearedCount(grade) {
+  const pp = GRADE_PASSAGES[grade];
+  if (!pp) return 0;
+  return pp.filter((p, i) => isStageCleared(grade, i)).length;
+}
+
+/* ========================================================
    STATE
 ======================================================== */
-let selectedGrade   = null;
-let selectedSub     = null;
-let quizPassages    = [];
-let qIndex          = 0;
-let correctCount    = 0;
-let comboCount      = 0;
-let speedCount      = 0;
-let totalPoints     = 0;
-let timerSec        = 0;
-let timerInterval   = null;
-let answered        = false;
-let translationOpen = false;
-let evidenceOpen    = false;
+let currentGrade     = null;
+let currentStageIdx  = null;
+let stageAnsweredOK  = false;
+let timerSec         = 0;
+let timerInterval    = null;
+let answered         = false;
 
 /* ========================================================
    UTILS
@@ -479,112 +535,131 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
   $('btnExit').classList.toggle('show', id === 'questionScreen');
+  window.scrollTo(0, 0);
 }
-
 function formatTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return m + ':' + String(s).padStart(2, '0');
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
 }
-
 function escapeHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 /* ========================================================
-   HOME: BUILD TABS
+   GRADE MAP
 ======================================================== */
-function buildHomeTabs() {
-  const gradesInData = [...new Set(PASSAGES.map(p => p.eiken_grade))];
-  const ordered = GRADE_ORDER.filter(g => gradesInData.includes(g));
+function buildGradeMap() {
+  const el = $('gradeMapCards');
+  el.innerHTML = '';
+  GRADE_ORDER.forEach(g => {
+    const pp = GRADE_PASSAGES[g];
+    if (!pp || !pp.length) return;
+    const unlocked   = isGradeUnlocked(g);
+    const complete   = isGradeComplete(g);
+    const cleared    = gradeClearedCount(g);
+    const total      = pp.length;
+    const pct        = Math.round((cleared / total) * 100);
 
-  const tabsDiv = $('gradeTabs');
-  tabsDiv.innerHTML = '';
-  ordered.forEach(g => {
-    const btn = document.createElement('button');
-    btn.className = 'grade-tab';
-    btn.textContent = GRADE_LABEL[g] || g;
-    btn.dataset.grade = g;
-    btn.addEventListener('click', () => selectGrade(g));
-    tabsDiv.appendChild(btn);
+    let statusText, cardClass;
+    if (!unlocked) {
+      statusText = '🔒 ロック中';
+      cardClass  = 'grade-card locked';
+    } else if (complete) {
+      statusText = '✓ クリア済み';
+      cardClass  = 'grade-card complete';
+    } else if (cleared > 0) {
+      statusText = cleared + '/' + total + ' ステージ';
+      cardClass  = 'grade-card in-progress';
+    } else {
+      statusText = total + ' ステージ';
+      cardClass  = 'grade-card';
+    }
+
+    const card = document.createElement('div');
+    card.className = cardClass;
+    card.innerHTML = `
+      <div class="grade-card-name">${GRADE_LABEL[g] || g}</div>
+      <div class="grade-card-status">${statusText}</div>
+      <div class="grade-card-bar">
+        <div class="grade-card-fill" style="width:${pct}%"></div>
+      </div>`;
+    if (unlocked) card.addEventListener('click', () => openStageMap(g));
+    el.appendChild(card);
   });
-
-  selectedGrade = null;
-  selectedSub   = null;
-  $('sublevelArea').style.display = 'none';
-  $('btnStart').disabled = true;
-}
-
-function selectGrade(grade) {
-  selectedGrade = grade;
-  selectedSub   = null;
-
-  document.querySelectorAll('.grade-tab').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.grade === grade);
-  });
-
-  buildSubLevels(grade);
-  $('btnStart').disabled = true;
-}
-
-function buildSubLevels(grade) {
-  const subLevelsInGrade = [...new Set(
-    PASSAGES.filter(p => p.eiken_grade === grade).map(p => p.sub_level)
-  )].sort((a, b) => a - b);
-
-  const area = $('sublevelArea');
-  const btnsDiv = $('sublevelBtns');
-  btnsDiv.innerHTML = '';
-
-  if (subLevelsInGrade.length === 0) {
-    area.style.display = 'none';
-    return;
-  }
-
-  subLevelsInGrade.forEach(lv => {
-    const count = PASSAGES.filter(p => p.eiken_grade === grade && p.sub_level === lv).length;
-    const lvLabel = `Lv.${lv}`;
-    const btn = document.createElement('button');
-    btn.className = 'sublevel-btn';
-    btn.dataset.sub = lv;
-    btn.innerHTML = `<span style="font-size:1rem;display:block;font-weight:800;">${lvLabel}</span><span class="sublevel-count">${count}問</span>`;
-    btn.addEventListener('click', () => selectSub(lv));
-    btnsDiv.appendChild(btn);
-  });
-
-  area.style.display = 'block';
-}
-
-function selectSub(sub) {
-  selectedSub = sub;
-
-  document.querySelectorAll('.sublevel-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.sub) === sub);
-  });
-
-  $('btnStart').disabled = false;
 }
 
 /* ========================================================
-   START QUIZ
+   STAGE MAP
 ======================================================== */
-function startQuiz() {
-  if (!selectedGrade || selectedSub === null) return;
+function openStageMap(grade) {
+  currentGrade = grade;
+  buildStageMap();
+  showScreen('stageMapScreen');
+}
 
-  quizPassages = PASSAGES.filter(
-    p => p.eiken_grade === selectedGrade && p.sub_level === selectedSub
-  );
+function backToGradeMap() {
+  clearInterval(timerInterval);
+  buildGradeMap();
+  showScreen('gradeMapScreen');
+}
 
-  qIndex       = 0;
-  correctCount = 0;
-  comboCount   = 0;
-  speedCount   = 0;
-  totalPoints  = 0;
+function buildStageMap() {
+  const grade = currentGrade;
+  $('stageMapGradeLabel').textContent = GRADE_LABEL[grade] || grade;
 
+  const pp        = GRADE_PASSAGES[grade];
+  const container = $('stagePath');
+  container.innerHTML = '';
+
+  pp.forEach((passage, i) => {
+    const cleared    = isStageCleared(grade, i);
+    const speed      = isStageSpeedCleared(grade, i);
+    const prevOK     = i === 0 || isStageCleared(grade, i - 1);
+    const isActive   = !cleared && prevOK;
+    const isLocked   = !cleared && !prevOK;
+    const clickable  = !isLocked;
+
+    let itemClass = 'stage-item';
+    if (speed)         itemClass += ' speed-cleared';
+    else if (cleared)  itemClass += ' cleared';
+    else if (isActive) itemClass += ' active';
+    else               itemClass += ' locked';
+
+    let circleContent = (i + 1).toString();
+    if (speed)       circleContent = '⭐';
+    else if (cleared) circleContent = '✓';
+    else if (isLocked) circleContent = '🔒';
+
+    let statusText = 'チャレンジ！';
+    if (speed)        statusText = 'スピードクリア！';
+    else if (cleared) statusText = 'クリア済み';
+    else if (isLocked) statusText = 'ロック中';
+
+    // Sub-level hint
+    const lvHint = passage.sub_level ? '  Lv.' + passage.sub_level : '';
+
+    const item = document.createElement('div');
+    item.className  = itemClass;
+    if (clickable) item.dataset.clickable = '1';
+    item.innerHTML  = `
+      <div class="stage-circle">${circleContent}</div>
+      <div class="stage-info">
+        <div class="stage-info-title">ステージ ${i + 1}${lvHint}</div>
+        <div class="stage-info-sub">${statusText}</div>
+      </div>`;
+    if (clickable) item.addEventListener('click', () => startStage(i));
+    container.appendChild(item);
+  });
+}
+
+/* ========================================================
+   START STAGE
+======================================================== */
+function startStage(idx) {
+  currentStageIdx = idx;
+  answered        = false;
+  stageAnsweredOK = false;
   showScreen('questionScreen');
   renderQuestion();
 }
@@ -593,88 +668,64 @@ function startQuiz() {
    RENDER QUESTION
 ======================================================== */
 function renderQuestion() {
-  const q = quizPassages[qIndex];
-  answered        = false;
-  translationOpen = false;
-  evidenceOpen    = false;
+  const q     = GRADE_PASSAGES[currentGrade][currentStageIdx];
+  const total = GRADE_PASSAGES[currentGrade].length;
+  answered = false;
 
   // HUD
-  $('hudQNum').textContent    = (qIndex + 1) + '/' + quizPassages.length;
-  $('hudCorrect').textContent = correctCount;
-  $('hudCombo').textContent   = '🔥' + comboCount;
-  $('hudGrade').textContent   = GRADE_LABEL[q.eiken_grade] || q.eiken_grade;
+  $('hudQNum').textContent    = (currentStageIdx + 1) + '/' + total;
+  $('hudGrade').textContent   = GRADE_LABEL[currentGrade] || currentGrade;
+  $('hudCleared').textContent = gradeClearedCount(currentGrade) + '/' + total;
 
   // Timer
   clearInterval(timerInterval);
   timerSec = 0;
   updateTimerDisplay(q.target_time_sec);
-  timerInterval = setInterval(() => {
-    timerSec++;
-    updateTimerDisplay(q.target_time_sec);
-  }, 1000);
+  timerInterval = setInterval(() => { timerSec++; updateTimerDisplay(q.target_time_sec); }, 1000);
 
-  // Passage (plain)
+  // Passage
   $('passageBox').innerHTML = escapeHtml(q.passage);
 
   // Question
   $('questionText').textContent = q.question;
 
   // Choices
-  const choices = [
+  const choicesDiv = $('choicesDiv');
+  choicesDiv.innerHTML = '';
+  [
     { key: 'a', text: q.choice_a },
     { key: 'b', text: q.choice_b },
     { key: 'c', text: q.choice_c },
     { key: 'd', text: q.choice_d },
-  ];
-  const choicesDiv = $('choicesDiv');
-  choicesDiv.innerHTML = '';
-  choices.forEach(({ key, text }) => {
+  ].forEach(({ key, text }) => {
     const btn = document.createElement('button');
-    btn.className = 'choice-btn';
+    btn.className   = 'choice-btn';
     btn.dataset.key = key;
-    btn.innerHTML = `<span class="choice-label">${key.toUpperCase()}</span>${escapeHtml(text)}`;
+    btn.innerHTML   = `<span class="choice-label">${key.toUpperCase()}</span>${escapeHtml(text)}`;
     btn.addEventListener('click', () => onAnswer(key));
     choicesDiv.appendChild(btn);
   });
 
-  // Feedback hidden
-  const fb = $('feedbackDiv');
-  fb.className = 'feedback';
-  fb.style.display = '';
-
-  // Review hidden
-  $('reviewBtns').style.display = 'none';
+  // Reset UI
+  $('feedbackDiv').className = 'feedback';
+  $('reviewBtns').style.display    = 'none';
+  $('stageActions').style.display  = 'none';
   $('translationBox').classList.remove('show');
   $('evidenceBox').classList.remove('show');
   $('btnTranslation').classList.remove('open');
   $('btnEvidence').classList.remove('open');
-
-  // Next hidden
-  $('btnNext').style.display = 'none';
-
-  // Scroll to top
-  window.scrollTo(0, 0);
 }
 
 /* ========================================================
-   TIMER DISPLAY
+   TIMER
 ======================================================== */
 function updateTimerDisplay(target) {
   $('timerElapsed').textContent = formatTime(timerSec);
   $('timerTarget').textContent  = '目標: ' + formatTime(target);
-
   const ratio = Math.min(timerSec / target, 1);
-  const pct   = (ratio * 100).toFixed(1);
   const bar   = $('timerBar');
-  bar.style.width = pct + '%';
-
-  if (ratio < 0.6) {
-    bar.style.background = '#10B981';
-  } else if (ratio < 0.9) {
-    bar.style.background = '#FBBF24';
-  } else {
-    bar.style.background = '#EF4444';
-  }
+  bar.style.width      = (ratio * 100).toFixed(1) + '%';
+  bar.style.background = ratio < 0.6 ? '#10B981' : ratio < 0.9 ? '#FBBF24' : '#EF4444';
 }
 
 /* ========================================================
@@ -685,175 +736,163 @@ function onAnswer(key) {
   answered = true;
   clearInterval(timerInterval);
 
-  const q          = quizPassages[qIndex];
-  const isCorrect  = key === q.answer.toLowerCase();
-  const isSpeed    = timerSec <= q.target_time_sec;
+  const q         = GRADE_PASSAGES[currentGrade][currentStageIdx];
+  const isCorrect = key === q.answer.toLowerCase();
+  const isSpeed   = timerSec <= q.target_time_sec;
+  stageAnsweredOK = isCorrect;
 
-  // Points
-  if (isCorrect) {
-    correctCount++;
-    comboCount++;
-    let pts = POINT_CONFIG.correct;
-    if (isSpeed) { pts += POINT_CONFIG.speedBonus; speedCount++; }
-    if (comboCount % 5 === 0) pts += POINT_CONFIG.combo5;
-    else if (comboCount % 3 === 0) pts += POINT_CONFIG.combo3;
-    totalPoints += pts;
-  } else {
-    comboCount = 0;
-  }
+  // 進捗を保存
+  if (isCorrect) markStageCleared(currentGrade, currentStageIdx, isSpeed);
 
-  // HUD update
-  $('hudCorrect').textContent = correctCount;
-  $('hudCombo').textContent   = '🔥' + comboCount;
-
-  // Color buttons
+  // 選択肢を色分け
   document.querySelectorAll('.choice-btn').forEach(btn => {
     btn.disabled = true;
-    if (btn.dataset.key === q.answer.toLowerCase()) {
-      btn.classList.add('correct');
-    } else if (btn.dataset.key === key && !isCorrect) {
-      btn.classList.add('wrong');
-    }
+    if (btn.dataset.key === q.answer.toLowerCase()) btn.classList.add('correct');
+    else if (btn.dataset.key === key && !isCorrect) btn.classList.add('wrong');
   });
 
-  // Feedback
+  // フィードバック
   const fb = $('feedbackDiv');
   if (isCorrect) {
     fb.className = 'feedback show correct-fb';
     $('feedbackIcon').textContent = '⭕';
-    $('feedbackMsg').textContent  = '正解！';
-    $('feedbackSpeed').textContent = isSpeed ? '⚡ スピードクリア！' : '';
+    $('feedbackMsg').textContent  = isSpeed ? '正解！⚡ スピードクリア！' : '正解！';
   } else {
     fb.className = 'feedback show wrong-fb';
     $('feedbackIcon').textContent = '✖';
-    $('feedbackMsg').textContent  = '不正解…';
-    $('feedbackSpeed').textContent = '';
+    $('feedbackMsg').textContent  = '不正解… 正解は ' + q.answer.toUpperCase() + ' でした';
   }
 
-  // Speed popup
-  if (isCorrect && isSpeed) {
-    showSpeedPopup();
-  }
+  if (isCorrect && isSpeed) showSpeedPopup();
 
-  // Show review buttons
+  // 復習ボタン
   $('reviewBtns').style.display = 'flex';
 
-  // Show next button
-  const btnNext = $('btnNext');
-  btnNext.style.display = 'block';
-  if (qIndex === quizPassages.length - 1) {
-    btnNext.textContent = '結果を見る 🏁';
+  // ステージアクション
+  const actions = $('stageActions');
+  const btnNext = $('btnStageNext');
+  actions.style.display = 'flex';
+
+  if (!isCorrect) {
+    btnNext.textContent = '🔄 もう一度';
+    btnNext.className   = 'btn-next btn-retry';
   } else {
-    btnNext.textContent = '次の問題へ →';
+    const gradeDone = isGradeComplete(currentGrade);
+    const nextIdx   = currentStageIdx + 1;
+    const hasNext   = nextIdx < GRADE_PASSAGES[currentGrade].length;
+
+    if (gradeDone) {
+      btnNext.textContent = '🎉 クリア！';
+    } else if (hasNext) {
+      btnNext.textContent = '次のステージへ →';
+    } else {
+      btnNext.textContent = '🗺 マップへ戻る';
+    }
+    btnNext.className = 'btn-next';
   }
+
+  // HUDのクリア数を更新
+  $('hudCleared').textContent =
+    gradeClearedCount(currentGrade) + '/' + GRADE_PASSAGES[currentGrade].length;
 }
 
 /* ========================================================
-   TOGGLE TRANSLATION / EVIDENCE
+   STAGE NEXT
 ======================================================== */
-function toggleTranslation() {
-  translationOpen = !translationOpen;
-  const box = $('translationBox');
-  const btn = $('btnTranslation');
-  if (translationOpen) {
-    const q = quizPassages[qIndex];
-    box.innerHTML = escapeHtml(q.japanese_translation);
-    box.classList.add('show');
-    btn.classList.add('open');
+function stageNext() {
+  if (!stageAnsweredOK) {
+    // リトライ
+    startStage(currentStageIdx);
+    return;
+  }
+  if (isGradeComplete(currentGrade)) {
+    showGradeClear();
+    return;
+  }
+  const nextIdx = currentStageIdx + 1;
+  if (nextIdx < GRADE_PASSAGES[currentGrade].length) {
+    startStage(nextIdx);
   } else {
-    box.classList.remove('show');
-    btn.classList.remove('open');
+    goToStageMap();
   }
 }
 
-function toggleEvidence() {
-  evidenceOpen = !evidenceOpen;
-  const box = $('evidenceBox');
-  const btn = $('btnEvidence');
-  if (evidenceOpen) {
-    const q = quizPassages[qIndex];
-
-    // Highlight evidence in passage
-    const escapedPassage  = escapeHtml(q.passage);
-    const escapedEvidence = escapeHtml(q.evidence_text);
-    const highlightedPassage = escapedPassage.replace(
-      escapedEvidence,
-      '<mark>' + escapedEvidence + '</mark>'
-    );
-    $('passageBox').innerHTML = highlightedPassage;
-
-    // Show reading point
-    box.innerHTML = `<div class="rp-label">📌 読み方のポイント</div>${escapeHtml(q.reading_point)}`;
-    box.classList.add('show');
-    btn.classList.add('open');
-  } else {
-    // Restore plain passage
-    const q = quizPassages[qIndex];
-    $('passageBox').innerHTML = escapeHtml(q.passage);
-    box.classList.remove('show');
-    btn.classList.remove('open');
-  }
-}
-
-/* ========================================================
-   NEXT QUESTION
-======================================================== */
-function nextQuestion() {
-  qIndex++;
-  if (qIndex >= quizPassages.length) {
-    showResult();
-  } else {
-    renderQuestion();
-  }
-}
-
-/* ========================================================
-   RESULT
-======================================================== */
-function showResult() {
-  showScreen('resultScreen');
-
-  const total   = quizPassages.length;
-  const rate    = Math.round((correctCount / total) * 100);
-
-  // Title
-  let emoji;
-  if (rate === 100) emoji = '🏆 パーフェクト！';
-  else if (rate >= 80) emoji = '🎉 すばらしい！';
-  else if (rate >= 60) emoji = '👍 よくできました！';
-  else emoji = '💪 もう一度挑戦！';
-
-  $('resultEmoji').textContent       = emoji;
-  $('resultScore').textContent       = correctCount + '/' + total;
-  $('resultScoreLabel').textContent  = '正解数';
-  $('statRate').textContent          = rate + '%';
-  $('statSpeed').textContent         = speedCount + '問';
-  $('statPoint').textContent         = totalPoints + 'pt';
-}
-
-/* ========================================================
-   RETRY / HOME
-======================================================== */
-function retryQuiz() {
-  qIndex       = 0;
-  correctCount = 0;
-  comboCount   = 0;
-  speedCount   = 0;
-  totalPoints  = 0;
-  showScreen('questionScreen');
-  renderQuestion();
-}
-
-function goHome() {
+function goToStageMap() {
   clearInterval(timerInterval);
-  showScreen('homeScreen');
-  buildHomeTabs();
+  buildStageMap();
+  showScreen('stageMapScreen');
 }
 
 function exitQuiz() {
   clearInterval(timerInterval);
-  showScreen('homeScreen');
-  buildHomeTabs();
+  buildStageMap();
+  showScreen('stageMapScreen');
+}
+
+/* ========================================================
+   TOGGLE 和訳 / 根拠
+======================================================== */
+function toggleTranslation() {
+  const q   = GRADE_PASSAGES[currentGrade][currentStageIdx];
+  const box = $('translationBox');
+  const btn = $('btnTranslation');
+  const open = box.classList.toggle('show');
+  btn.classList.toggle('open', open);
+  if (open) box.innerHTML = escapeHtml(q.japanese_translation);
+}
+
+function toggleEvidence() {
+  const q   = GRADE_PASSAGES[currentGrade][currentStageIdx];
+  const box = $('evidenceBox');
+  const btn = $('btnEvidence');
+  const open = box.classList.toggle('show');
+  btn.classList.toggle('open', open);
+  if (open) {
+    const ep = escapeHtml(q.passage);
+    const ee = escapeHtml(q.evidence_text);
+    $('passageBox').innerHTML = ep.replace(ee, '<mark>' + ee + '</mark>');
+    box.innerHTML = `<div class="rp-label">📌 読み方のポイント</div>${escapeHtml(q.reading_point)}`;
+  } else {
+    $('passageBox').innerHTML = escapeHtml(q.passage);
+  }
+}
+
+/* ========================================================
+   GRADE CLEAR
+======================================================== */
+function showGradeClear() {
+  const grade      = currentGrade;
+  const gi         = GRADE_ORDER.indexOf(grade);
+  const total      = GRADE_PASSAGES[grade].length;
+  const speedCount = GRADE_PASSAGES[grade].filter((p, i) => isStageSpeedCleared(grade, i)).length;
+  const allSpeed   = speedCount === total;
+
+  $('gradeClearStar').textContent  = allSpeed ? '⭐⭐⭐' : '🎉';
+  $('gradeClearTitle').textContent = GRADE_LABEL[grade] + ' クリア！';
+
+  let msg = '全' + total + 'ステージをクリアしました！';
+  if (allSpeed) msg += '\n⚡ 全問スピードクリア達成！';
+  $('gradeClearMsg').textContent = msg;
+
+  // 次の級ボタン
+  const nextGradeIdx = gi + 1;
+  const btnNext = $('btnNextGrade');
+  const nextG   = GRADE_ORDER[nextGradeIdx];
+  if (nextG && GRADE_PASSAGES[nextG] && GRADE_PASSAGES[nextG].length > 0) {
+    btnNext.textContent   = GRADE_LABEL[nextG] + ' へ →';
+    btnNext.style.display = '';
+  } else {
+    btnNext.style.display = 'none';
+  }
+
+  showScreen('gradeClearScreen');
+}
+
+function goNextGrade() {
+  const gi = GRADE_ORDER.indexOf(currentGrade);
+  if (gi + 1 < GRADE_ORDER.length) {
+    openStageMap(GRADE_ORDER[gi + 1]);
+  }
 }
 
 /* ========================================================
@@ -862,7 +901,7 @@ function exitQuiz() {
 function showSpeedPopup() {
   const popup = $('speedPopup');
   popup.classList.remove('pop');
-  void popup.offsetWidth; // reflow
+  void popup.offsetWidth;
   popup.classList.add('pop');
   setTimeout(() => popup.classList.remove('pop'), 1200);
 }
@@ -870,7 +909,8 @@ function showSpeedPopup() {
 /* ========================================================
    INIT
 ======================================================== */
-buildHomeTabs();
+buildGradeMap();
+showScreen('gradeMapScreen');
 </script>
 </body>
 </html>
