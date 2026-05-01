@@ -1,0 +1,13 @@
+# 開発用スクリプト
+*.py
+
+# データファイル
+*.xlsx
+*.xls
+*.json
+*.zip
+*.csv
+
+# システム
+.DS_Store
+Thumbs.db
